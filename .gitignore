@@ -1,0 +1,15 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Project Data (Ignore local memory contents, keep the harness)
+.memory/*
+!.memory/INDEX.md
+
+# Local Gemini Config
+.gemini/
