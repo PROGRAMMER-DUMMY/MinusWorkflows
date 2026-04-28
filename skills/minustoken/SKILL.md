@@ -15,4 +15,4 @@ description: Density management protocol. Switch tiers to control token usage an
 
 ### Rules
 - Prepend a compact task list to responses.
-- Safety Override: Resume L1/Verbose immediately for destructive actions.
+- **Safety Override**: If a command is flagged by the `enforcer` (Rules or Intent), immediately resume **L1 (Full Fidelity)** for that turn.

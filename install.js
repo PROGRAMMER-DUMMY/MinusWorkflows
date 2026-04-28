@@ -6,20 +6,20 @@ const repoSkillsDir = path.join(__dirname, 'skills');
 
 const { execSync } = require('child_process');
 
-console.log('🚀 Installing minusWorkflows Stack...');
+console.log('Installing minusWorkflows Stack...');
 
 // Check for code-review-graph dependency
 try {
-    console.log('📦 Checking dependencies...');
+    console.log('Checking dependencies...');
     execSync('code-review-graph --version', { stdio: 'ignore' });
-    console.log('✅ code-review-graph is already installed.');
+    console.log('code-review-graph is already installed.');
 } catch (e) {
-    console.log('📥 Installing code-review-graph...');
+    console.log('Installing code-review-graph...');
     try {
         execSync('pip install code-review-graph', { stdio: 'inherit' });
-        console.log('✅ code-review-graph installed successfully.');
+        console.log('code-review-graph installed successfully.');
     } catch (pipError) {
-        console.log('❌ Failed to install code-review-graph. Please install it manually: pip install code-review-graph');
+        console.log('Failed to install code-review-graph. Please install it manually: pip install code-review-graph');
     }
 }
 
@@ -37,20 +37,32 @@ function copyRecursive(src, dest) {
 }
 
 copyRecursive(repoSkillsDir, targetDir);
-console.log('✅ Skills injected into .gemini/skills/');
+console.log('Skills injected into .gemini/skills/');
 
 const contextPath = path.join(process.cwd(), 'CONTEXT.md');
 if (!fs.existsSync(contextPath)) {
-    const template = `# Project Context\n\n## Purpose\n[Describe why this project exists]\n\n## Tech Stack\n[Languages, Frameworks, DBs]\n\n## Domain Language\n[Key terms and their definitions]`;
+    const template = `# Project Context\n\n## Purpose\n[Describe why this project exists]\n\n## Tech Stack\n[Languages, Frameworks, DBs]\n\n## Domain Language\n[Key terms and their definitions]\n\n## Configuration\nALLOW_EVOLVING_GUARDRAILS: true`;
     fs.writeFileSync(contextPath, template);
-    console.log('✅ Created starter CONTEXT.md');
+    console.log('Created starter CONTEXT.md');
 }
 
 const memoryDir = path.join(process.cwd(), '.memory');
 if (!fs.existsSync(memoryDir)) {
     fs.mkdirSync(memoryDir);
-    fs.writeFileSync(path.join(memoryDir, 'INDEX.md'), '# Knowledge Graph Index\n\n[[Decisions]]\n[[Lessons-Learned]]');
-    console.log('✅ Initialized local Memory Vault at .memory/');
+    fs.mkdirSync(path.join(memoryDir, 'snapshots'));
+    fs.writeFileSync(path.join(memoryDir, '.gitignore'), 'snapshots/*.json');
+    fs.writeFileSync(path.join(memoryDir, 'INDEX.md'), '# Knowledge Graph Index\n\n[[Decisions]]\n[[Lessons-Learned]]\n[[Evolution]]');
+    fs.writeFileSync(path.join(memoryDir, 'EVOLUTION.md'), '# Evolutionary Heuristics\n\n> This file tracks Scenarios, Failures, and Validated Fallbacks to improve AI performance on this project.\n\n## Heuristics Tree\n\n- No data yet. Build something to evolve.');
+    console.log('Initialized local Memory Vault at .memory/');
 }
 
-console.log('\n🎉 Setup Complete! Try: "Gemini, activate the Architect skill."');
+const vaultDir = path.join(process.cwd(), '.vault');
+if (!fs.existsSync(vaultDir)) {
+    fs.mkdirSync(vaultDir);
+    fs.mkdirSync(path.join(vaultDir, 'sandbox'));
+    fs.mkdirSync(path.join(vaultDir, 'backups'));
+    fs.writeFileSync(path.join(vaultDir, '.gitignore'), 'sandbox/*\n!backups/');
+    console.log('Initialized local Vault-Harness at .vault/');
+}
+
+console.log('\nSetup Complete! Try: "Gemini, activate the Architect skill."');

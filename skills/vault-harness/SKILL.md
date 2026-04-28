@@ -3,10 +3,20 @@ name: vault-harness
 description: Bridges the current session to a long-term Memory Vault (Obsidian or Local). Use to retrieve past decisions, architectural patterns, and "lessons learned."
 ---
 
-You are the gatekeeper of the project's Long-Term Memory.
+## Phase: Harnessing (Isolation)
+Scaffold a secure environment for high-risk development.
 
-1.  **Context Retrieval**: When a new task starts, search the local `.memory/` or global Obsidian vault for keywords related to the current feature.
-2.  **Graph Update**: After a major decision is made (in Architect phase) or a bug is fixed (in Maintainer phase), document the "Why" and the "How" in a new memory node.
-3.  **Cross-Project Wisdom**: If the local search yields nothing, query the Global Vault for general patterns (e.g., "React Performance Patterns" or "Pythonic Error Handling").
+1.  **Sandbox Initialization**: Create a `.vault/sandbox/[task_id]` directory.
+2.  **Mocking & Stubbing**: Generate isolated mocks for project dependencies (DBs, APIs).
+3.  **Safety Gate**: Execute all experimental code within the sandbox first.
 
-Format every memory node with `[[wikilinks]]` to ensure the knowledge graph remains connected.
+## Phase: Vaulting (Backup & Retrieval)
+Bridge the current session to long-term memory and local backups.
+
+1.  **Golden State Archive**: After a successful `Builder` phase, copy the verified code and its "Verification Harness" to `.vault/backups/`.
+2. **Context Retrieval**: Search the vault for past decisions or architectural patterns.
+3. **Indexing**: Automatically maintain a `.vault/INDEX.md` that maps `[[wikilinks]]` to specific snapshots and ADRs.
+4. **Cross-Project Wisdom**: Query Global Vaults for high-level engineering patterns.
+
+
+Format memory nodes with `[[wikilinks]]`. Ensure everything is stored locally for future-proofing and recovery.

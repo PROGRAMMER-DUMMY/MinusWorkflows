@@ -4,15 +4,19 @@ description: Manages the codebase dependency graph and performs blast-radius ana
 ---
 
 ## Phase: Mapping
-Build and query a structural map of the codebase to minimize token usage.
+Build and query a structural map of the codebase using portable execution.
 
-1. **Build/Update**: Initialize or refresh the local SQLite graph.
-   - Command: `code-review-graph build` (Full) or `code-review-graph update` (Incremental)
-2. **Impact Analysis**: Analyze the "blast radius" of recent changes compared to a git base.
-   - Command: `code-review-graph detect-changes --base [branch/hash]`
-3. **Background Sync**: Watch the filesystem and update the graph in real-time.
-   - Command: `code-review-graph watch`
-4. **Visualize**: Generate a D3.js visualization for structural auditing.
-   - Command: `code-review-graph visualize`
+1. **Build/Update**: Initialize or refresh the graph. 
+   - Preferred: `uvx code-review-graph build`
+   - Fallback: `code-review-graph build`
+2. **Impact Analysis**: Analyze "blast radius".
+   - Preferred: `uvx code-review-graph detect-changes --base HEAD~1`
+4. **Visualize**: Generate D3.js architecture map.
+   - Command: `uvx code-review-graph visualize`
+5. **Snapshot**: Export current structural state as a versioned JSON delta.
+   - Command: `uvx code-review-graph status --json` (Used by Evolve)
+
+
+**Note**: If `uvx` is not found, the agent should attempt to install `uv` or use the local `pip` installation.
 
 **Output**: A `.code-review-graph/` directory containing the graph database and structural insights.
