@@ -4,7 +4,24 @@ const path = require('path');
 const targetDir = path.join(process.cwd(), '.gemini', 'skills');
 const repoSkillsDir = path.join(__dirname, 'skills');
 
+const { execSync } = require('child_process');
+
 console.log('🚀 Installing minusWorkflows Stack...');
+
+// Check for code-review-graph dependency
+try {
+    console.log('📦 Checking dependencies...');
+    execSync('code-review-graph --version', { stdio: 'ignore' });
+    console.log('✅ code-review-graph is already installed.');
+} catch (e) {
+    console.log('📥 Installing code-review-graph...');
+    try {
+        execSync('pip install code-review-graph', { stdio: 'inherit' });
+        console.log('✅ code-review-graph installed successfully.');
+    } catch (pipError) {
+        console.log('❌ Failed to install code-review-graph. Please install it manually: pip install code-review-graph');
+    }
+}
 
 if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
