@@ -1,68 +1,158 @@
-# minusWorkflows Quickstart
+# minusWorkflows — Quickstart
 
-**Software engineering minus the overhead.**
-
-This guide will help you install and orchestrate your project using the `minusWorkflows` swarm.
+Get from zero to a running swarm in under 10 minutes.
 
 ---
 
-## 1. Installation
+## Prerequisites
 
-Inject the stack into your project root:
+- **Gemini CLI** installed and authenticated
+- **uv** for portable Python tool execution
 
 ```bash
-# Using Node.js (Windows/macOS/Linux)
-node C:/path/to/MinusWorkflows/install.js
-
-# Using Bash (macOS/Linux)
-bash C:/path/to/MinusWorkflows/install.sh
+# Install uv (if missing)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ---
 
-## 2. The Core Command: `minus`
+## Step 1 — Install into Your Project
 
-The `minus` skill is your master orchestrator. It handles the entire lifecycle automatically.
+```bash
+# Clone minusWorkflows once (wherever you keep tools)
+git clone https://github.com/YOUR_USERNAME/minusWorkflows.git ~/tools/minusWorkflows
 
-**Usage:**
-> "Gemini, minus: [Your Feature Request or Bug Report]"
+# Navigate to your project
+cd /path/to/your-project
 
-**What happens next:**
-1. **Mapper Sync**: Structural map updated via `uvx code-review-graph`.
-2. **Architecture**: Design grilling and PRD generation.
-3. **Planning**: Dependency analysis and `TASKS.json` creation.
-4. **Swarm Execution**: Parallel sub-agents spawn on isolated git branches.
-5. **Audit & Merge**: Automatic verification before merging into your feature branch.
-6. **Evolution**: Lessons learned are saved to `.memory/EVOLUTION.md`.
+# Inject the skill stack
+node ~/tools/minusWorkflows/install.js
+```
 
----
-
-## 3. Minustoken Protocol (Density Control)
-
-Manage how much the AI talks to save tokens and speed up execution.
-
-- **`/mt L1` (Full Fidelity)**: Bullet points, grammar. Best for Audits/Design.
-- **`/mt L2` (Telegraphic)**: Dropped articles, abbreviations. Default mode.
-- **`/mt L3` (Keywords)**: High-speed status updates only.
-- **`/mt L4` (Code-Only)**: Zero prose. Maximum token budget for logic.
+This creates `.memory/`, `.vault/`, and `.code-review-graph/` and registers the skills with Gemini CLI.
 
 ---
 
-## 4. Self-Healing & Safety
+## Step 2 — Bootstrap the Dependency Graph
 
-- **Failure Escalation**: If a task fails 3 times, it is moved to `.vault/sandbox/failed_[id]` for your review. Your source code remains clean.
-- **Hybrid Guardrails**: Dangerous commands like `rm -rf` or `git reset --hard` automatically trigger a high-fidelity (L1) safety explanation.
-- **Evolving Intelligence**: Set `ALLOW_EVOLVING_GUARDRAILS: true` in `CONTEXT.md` to let the AI learn project-specific safety rules over time.
+Before the first run, give the Mapper a baseline:
 
----
+```bash
+uvx code-review-graph build
+```
 
-## 5. Local Intelligence (The Memory Vault)
-
-- **`.memory/`**: Permanent record of decisions, roadmap, and evolution.
-- **`.vault/`**: Secure sandbox for experimental code and immutable backups.
-- **`CONTEXT.md`**: The foundational "Truth" file for your project.
+This scans your codebase and writes a SQLite graph to `.code-review-graph/graph.db`. Re-run after large refactors.
 
 ---
 
-**Built for AI-Native Engineers.**
-No more manual context management. Just build.
+## Step 3 — Your First Command
+
+For a complex feature, use the Master Orchestrator:
+
+```
+Gemini, minus: add a rate-limiting layer to the /api/v2 endpoints
+```
+
+The system walks through all five phases automatically:
+
+1. **Architect** — grills you on design decisions one at a time, writes the PRD
+2. **Planner** — builds a dependency graph, outputs `TASKS.json`
+3. **Swarm** — spawns parallel sub-agents on isolated branches
+4. **Audit** — validates each branch against the PRD before merge
+5. **Evolve** — logs what worked and what failed for next time
+
+---
+
+## Step 4 — Targeted Workflows
+
+You don't always need the full pipeline. Use individual phases:
+
+### Design only (no code yet)
+```
+Gemini, architect: a webhook delivery system with retry logic
+```
+
+### Implement from an existing PRD
+```
+Gemini, builder: .memory/PRD_webhook_delivery.md
+```
+
+### Fix a bug
+```
+Gemini, maintainer: the /checkout endpoint returns 500 on free-tier users
+```
+
+### Debug a hard problem
+```
+diagnose: payment webhook signature validation fails intermittently
+```
+
+---
+
+## Step 5 — Control Token Density
+
+Switch tiers mid-session to manage cost and speed:
+
+| Command | Mode | Use when |
+| :--- | :--- | :--- |
+| `/mt L1` | Full fidelity | Designing, auditing |
+| `/mt L2` | Telegraphic (default) | Normal development |
+| `/mt L3` | Keywords only | Status checks |
+| `/mt L4` | Code + paths only | Heavy implementation |
+
+---
+
+## Step 6 — Check What the System Learned
+
+After any session, review the evolution log:
+
+```bash
+cat .memory/EVOLUTION.md
+```
+
+Each entry follows: **Scenario → Failure → Fallback**. Next time the AI hits the same scenario, it skips to the validated fallback automatically.
+
+---
+
+## Key Files
+
+| File | Purpose |
+| :--- | :--- |
+| `.memory/CONTEXT.md` | Domain language and architectural mandates. Set hard constraints here. |
+| `.memory/EVOLUTION.md` | Accumulated Scenario → Failure → Fallback patterns |
+| `.memory/TASKS.json` | Current task dependency tree (machine-readable) |
+| `.memory/ROADMAP.md` | Current task dependency tree (human-readable) |
+| `.vault/INDEX.md` | Map of all golden-state backups and snapshots |
+| `.code-review-graph/graph.db` | SQLite structural dependency graph |
+
+---
+
+## Failure Recovery
+
+If a sub-agent fails its audit three times, the system automatically:
+1. Kills and reverts the failing branch
+2. Moves logs to `.vault/sandbox/failed_[task_id]/`
+3. Surfaces a Diagnostic Report and waits for your input
+
+You can also trigger manual diagnosis at any time:
+```
+diagnose: [description of the failure]
+```
+
+---
+
+## Visualize the Architecture
+
+```bash
+uvx code-review-graph visualize
+```
+
+Opens a D3.js graph in your browser showing the full dependency structure of your codebase.
+
+---
+
+## Next Steps
+
+- Edit `.memory/CONTEXT.md` to define domain vocabulary and non-negotiable constraints
+- Review `skills/minus/SKILL.md` to see exactly what the orchestrator does at each phase
+- Run `uvx code-review-graph status --json` to inspect the current structural snapshot

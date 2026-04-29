@@ -1,0 +1,28 @@
+{
+  "name": "minus-workflows",
+  "version": "1.0.0",
+  "description": "High-precision AI engineering skill stack for Gemini CLI",
+  "main": "install.js",
+  "bin": {
+    "minus-init": "install.js"
+  },
+  "files": [
+    "install.js",
+    "skills/",
+    "templates/",
+    "README.md",
+    "QUICKSTART.md"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gemini",
+    "ai-agent",
+    "workflows",
+    "automation",
+    "engineering"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,8 +1,20 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
-const targetDir = path.join(process.cwd(), '.gemini', 'skills');
+// Target directory for skills: Try to use the user's global .gemini folder first
+// so the skills are available to the CLI globally.
+const homeDir = os.homedir();
+const globalGeminiSkills = path.join(homeDir, '.gemini', 'skills');
+const localGeminiSkills = path.join(process.cwd(), '.gemini', 'skills');
+
+// Project specific infrastructure
 const repoSkillsDir = path.join(__dirname, 'skills');
+
+// Set targetDir: prefer global home directory for widest availability
+const targetDir = fs.existsSync(path.dirname(globalGeminiSkills)) ? globalGeminiSkills : localGeminiSkills;
 
 const { execSync } = require('child_process');
 

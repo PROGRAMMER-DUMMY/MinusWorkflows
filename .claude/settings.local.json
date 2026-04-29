@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.memory\\\\snapshots\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.vault\\\\backups\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.vault\\\\sandbox\")"
+    ]
+  }
+}

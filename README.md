@@ -1,89 +1,175 @@
 # minusWorkflows
 
-**High-precision orchestration for Gemini CLI. Software engineering minus the overhead.**
+**High-precision AI engineering. Software development minus the overhead.**
 
-`minusWorkflows` is a surgical, phase-based pipeline designed to replace generic AI "chatting" with modular, data-driven engineering workflows. It utilizes structural codebase mapping, parallel sub-agent execution, and reinforcement learning to deliver features with maximum rigor and minimum token bloat.
+A surgical, phase-based skill stack for Gemini CLI that replaces ad-hoc prompting with a structured, self-improving engineering methodology. Parallel sub-agents. Structural codebase mapping. Reinforcement learning. Zero context bloat.
 
 ---
 
-## Architecture Overview
+## The Problem
+
+Standard AI agents fail at scale in three ways:
+
+| Failure | Cause | Effect |
+| :--- | :--- | :--- |
+| **Context Dumb Zone** | Irrelevant files flood the window | Reasoning quality collapses past 60% capacity |
+| **Integration Hell** | Parallel agents share a repo blindly | Conflicting edits, broken builds |
+| **Conceptual Drift** | No project-level memory | AI repeats the same architectural mistakes |
+
+minusWorkflows solves all three with a **Surgical Context model** and a **Linear Evolutionary framework**.
+
+---
+
+## How It Works
+
+One command invokes the full lifecycle:
+
+```
+Gemini, minus: [your goal]
+```
+
+The **Master Orchestrator** (`minus`) runs five phases:
+
+```
+Architect → Planner → Swarm Execution → Audit → Evolve
+```
 
 ```mermaid
 graph TD
-    A[User Request] --> B{minus Master Orchestrator}
-    
-    subgraph "Phase 1: Research & Design"
-    B --> C[Mapper: Structural Sync]
-    C --> D[Architect: Grill-me -> to-PRD]
-    D --> E[Vault: Knowledge Retrieval]
+    A[User Goal] --> B{minus: Master Orchestrator}
+
+    subgraph "Phase 1 · Architect"
+    B --> C[grill-me: resolve ambiguity]
+    C --> D[domain-model: align vocabulary]
+    D --> E[to-prd: write the spec]
     end
-    
-    subgraph "Phase 2: Execution Planning"
-    E --> F[Planner: Dependency Graph]
-    F --> G[Tasks.json: Parallel Breakdown]
+
+    subgraph "Phase 2 · Plan"
+    E --> F[mapper: build dependency graph]
+    F --> G[planner: TASKS.json tree]
     end
-    
-    subgraph "Phase 3: Parallel Swarm"
-    G --> H[Sub-agent 1: Feature A]
-    G --> I[Sub-agent 2: Feature B]
-    G --> J[Sub-agent 3: Bug Fix]
+
+    subgraph "Phase 3 · Execute"
+    G --> H[sub-agent A · isolated branch]
+    G --> I[sub-agent B · isolated branch]
+    G --> J[sub-agent C · isolated branch]
     end
-    
-    subgraph "Phase 4: Quality Gate"
-    H & I & J --> K[Auditor: Integrated Test Harness]
-    K --> L[Vault: Golden State Archive]
+
+    subgraph "Phase 4 · Verify"
+    H & I & J --> K[auditor: quality gate]
+    K --> L[vault-harness: golden state archive]
     end
-    
-    L --> M[Evolve: Lessons Learned]
-    M --> N[Updated Intelligence]
+
+    subgraph "Phase 5 · Evolve"
+    L --> M[evolve: update heuristics]
+    M --> N[enforcer: prune context]
+    end
 ```
 
 ---
 
-## Core Capabilities
+## The Skill Stack
 
-### 1. Structural Mapping (The Spine)
-Powered by `code-review-graph`, the system maintains a local SQLite map of your entire project. The AI uses this to identify the "Blast Radius" of changes, allowing it to read only the relevant files and reduce token usage by 5x-10x.
+### Core Pipeline
 
-### 2. The Minustoken Protocol (Density Control)
-Automatically manage the AI's verbosity based on the task:
-- **L1 (Full Fidelity)**: High-precision architectural design and auditing.
-- **L2 (Telegraphic)**: Default developer mode (fast & efficient).
-- **L4 (Code-Only)**: Zero-prose implementation for maximum logic budget.
+| Skill | Command | Role |
+| :--- | :--- | :--- |
+| `minus` | `Gemini, minus: [goal]` | Master Orchestrator. Runs the full lifecycle. |
+| `architect` | `architect` | Ideation → PRD. Runs grill-me + domain-model + to-prd + auditor. |
+| `builder` | `builder` | PRD → Code. Runs planner + to-issues + tdd + auditor. |
+| `maintainer` | `maintainer` | Fix & Improve. Runs triage + diagnose + auditor + improve. |
+| `agentic` | `agentic` | Teach Gemini a new skill. |
 
-### 3. Parallel Swarm Orchestration
-The **`minus`** master agent identifies independent tasks and spawns parallel sub-agents on isolated git branches. It manages conflict resolution and integrates them only after passing a unified test harness.
+### Research & Planning
 
-### 4. Self-Evolving Intelligence
-Every session ends with the **`evolve`** phase. The AI analyzes its failures and successes, updating a local `EVOLUTION.md` heuristics tree. It learns from its own mistakes so it never makes the same error twice on your project.
+| Skill | Role |
+| :--- | :--- |
+| `mapper` | Builds a SQLite dependency graph via `uvx code-review-graph`. Blast-radius analysis before any change. |
+| `planner` | Converts a PRD into a dependency-aware `TASKS.json` tree for parallel execution. |
+| `architect` | Combines grill-me → domain-model → to-prd → auditor into one phase. |
+| `grill-me` | One-question-at-a-time design interview. Exhausts unknowns before code is written. |
+| `domain-model` | Validates new plans against the project's `CONTEXT.md` vocabulary and mandates. |
+| `to-prd` | Generates a formal spec from grilled decisions. Saved to `.memory/PRD_[feature].md`. |
+| `to-issues` | Slices a PRD into atomic, dependency-mapped implementation tasks. |
 
-### 5. Vault-Harness (Safety & Archival)
-- **Harness**: Isolated sandboxes for high-risk development.
-- **Vault**: Immutable local backups of verified "Golden States" for future-proofing and recovery.
+### Execution & Safety
+
+| Skill | Role |
+| :--- | :--- |
+| `tdd` | Red → Green → Refactor loop. Never writes code before a failing test. |
+| `diagnose` | Scientific debugging: Reproduce → Trace → Hypothesize → Fix. |
+| `auditor` | Quality gate at every phase transition. Blocks drift and security regressions. |
+| `vault-harness` | Sandbox isolation for experimental code + golden-state backup to `.vault/`. |
+
+### Context Engineering
+
+| Skill | Role |
+| :--- | :--- |
+| `enforcer` | Safety guardrails (blocks force-push, rm -rf, etc.) + context window pruning. |
+| `minustoken` | Four-tier token density control: L1 (full) → L4 (code-only). |
+| `evolve` | Captures Scenario → Failure → Fallback patterns. Updates `.memory/EVOLUTION.md`. |
+
+---
+
+## Architecture Advantages
+
+| Dimension | Standard AI Agent | minusWorkflows |
+| :--- | :--- | :--- |
+| **Context** | Full-file dumps or RAG | Structural graph + delta snapshots |
+| **Reasoning headroom** | Hits the dumb zone | Constant 60%+ buffer via `enforcer` |
+| **Execution model** | Single-agent sequential | Parallel swarm, dependency-isolated |
+| **Memory** | Session-only | Reinforcement evolution via `.memory/` |
+| **Safety** | Direct source edits | Sandbox harness → audit → merge |
+
+---
+
+## Project Layout After Installation
+
+```
+your-project/
+├── .memory/
+│   ├── CONTEXT.md          # Domain language and mandates
+│   ├── EVOLUTION.md        # Scenario → Failure → Fallback log
+│   ├── ROADMAP.md          # Human-readable task graph
+│   ├── TASKS.json          # Machine-readable dependency tree
+│   └── snapshots/          # Versioned structural deltas
+├── .vault/
+│   ├── backups/            # Verified golden states
+│   ├── sandbox/            # Isolated experiment space
+│   └── INDEX.md            # Wikilink map of snapshots and ADRs
+└── .code-review-graph/
+    └── graph.db            # SQLite dependency graph
+```
 
 ---
 
 ## Installation
 
-Inject the "Minus-stack" into any project root:
-
 ```bash
-# Clone the repository
+# Clone the stack
 git clone https://github.com/YOUR_USERNAME/minusWorkflows.git
 
-# Inject into your project
-node C:/path/to/minusWorkflows/install.js
+# Inject into any project
+node /path/to/minusWorkflows/install.js
 ```
 
----
-
-## Usage
-
-Start the orchestrator with a single command:
-
-> "Gemini, minus: [Your Feature/Fix Request]"
-
-The system will take it from there - mapping, design, implementation, and evolution.
+**Prerequisites**: Gemini CLI, `uv` (for `uvx code-review-graph`).
 
 ---
-Built for the next generation of AI-Native Engineers.
+
+## Quick Reference
+
+```
+Gemini, minus: [complex feature]        # Full lifecycle
+Gemini, architect: [idea]              # Design only
+Gemini, builder: [PRD reference]       # Implement only
+Gemini, maintainer: [bug or issue]     # Fix & improve
+/mt L4                                 # Switch to code-only mode
+/mt L1                                 # Switch to full-fidelity mode
+```
+
+See [QUICKSTART.md](QUICKSTART.md) for a step-by-step first run.
+
+---
+
+Built for AI-native engineers who ship.
