@@ -6,6 +6,7 @@ description: Manages the codebase dependency graph and performs blast-radius ana
 ## Phase: Mapping
 Build and query a structural map of the codebase using portable execution.
 
+0. **Auto-Bootstrap**: If `.code-review-graph/graph.db` is missing, RUN `uvx code-review-graph build` immediately.
 1. **Build/Update**: Initialize or refresh the graph. 
    - Preferred: `uvx code-review-graph build`
    - Fallback: `code-review-graph build`

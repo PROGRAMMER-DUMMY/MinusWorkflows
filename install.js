@@ -4,16 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// Target directory for skills: Try to use the user's global .gemini folder first
-// so the skills are available to the CLI globally.
 const homeDir = os.homedir();
 const globalGeminiSkills = path.join(homeDir, '.gemini', 'skills');
 const localGeminiSkills = path.join(process.cwd(), '.gemini', 'skills');
-
-// Project specific infrastructure
 const repoSkillsDir = path.join(__dirname, 'skills');
-
-// Set targetDir: prefer global home directory for widest availability
 const targetDir = fs.existsSync(path.dirname(globalGeminiSkills)) ? globalGeminiSkills : localGeminiSkills;
 
 const { execSync } = require('child_process');
@@ -35,29 +29,52 @@ try {
     }
 }
 
+// Automate initial graph build
+console.log('Bootstrapping structural dependency graph...');
+try {
+    execSync('uvx code-review-graph build', { stdio: 'inherit' });
+} catch (uvxError) {
+    try {
+        execSync('code-review-graph build', { stdio: 'inherit' });
+    } catch (buildError) {
+        console.log('Note: Initial graph build failed.');
+    }
+}
+
 if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
 }
 
 function linkSkills(srcDir, destDir) {
     if (!fs.existsSync(srcDir)) return;
-    
     const skills = fs.readdirSync(srcDir);
     for (const skill of skills) {
         const srcPath = path.join(srcDir, skill);
         const destPath = path.join(destDir, skill);
-        
         if (fs.statSync(srcPath).isDirectory()) {
             if (fs.existsSync(destPath)) {
                 fs.rmSync(destPath, { recursive: true, force: true });
             }
-            fs.symlinkSync(srcPath, destPath, 'junction');
+            try {
+                fs.symlinkSync(srcPath, destPath, 'junction');
+            } catch (e) {
+                // Fallback to copy if symlink fails
+                function copyRecursive(src, dest) {
+                    if (fs.statSync(src).isDirectory()) {
+                        if (!fs.existsSync(dest)) fs.mkdirSync(dest);
+                        fs.readdirSync(src).forEach(child => copyRecursive(path.join(src, child), path.join(dest, child)));
+                    } else {
+                        fs.copyFileSync(src, dest);
+                    }
+                }
+                copyRecursive(srcPath, destPath);
+            }
         }
     }
 }
 
 linkSkills(repoSkillsDir, targetDir);
-console.log('Skills linked to .gemini/skills/ (auto-updating enabled)');
+console.log('Skills linked/injected into .gemini/skills/');
 
 const contextPath = path.join(process.cwd(), 'CONTEXT.md');
 if (!fs.existsSync(contextPath)) {

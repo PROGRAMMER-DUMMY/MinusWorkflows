@@ -6,9 +6,10 @@ echo "Installing Agentic Blueprints..."
 if ! command -v code-review-graph &> /dev/null; then
     echo "Installing code-review-graph..."
     pip install code-review-graph || echo "Failed to install code-review-graph automatically. Please run: pip install code-review-graph"
-else
-    echo "code-review-graph is already installed."
 fi
+
+echo "Bootstrapping structural dependency graph..."
+uvx code-review-graph build || code-review-graph build || echo "Note: Initial graph build failed."
 
 # Ensure .gemini/skills exists
 mkdir -p .gemini/skills
