@@ -38,11 +38,11 @@ EOF
 fi
 
 # Setup local memory
-mkdir -p .memory/snapshots
+mkdir -p .memory/sessions
 if [ ! -f .memory/INDEX.md ]; then
   echo -e "# Knowledge Graph Index\n\n[[Decisions]]\n[[Lessons-Learned]]\n[[Evolution]]" > .memory/INDEX.md
   echo -e "# Evolutionary Heuristics\n\n> This file tracks Scenarios, Failures, and Validated Fallbacks.\n\n## Heuristics Tree\n\n- No data yet." > .memory/EVOLUTION.md
-  echo "snapshots/*.json" > .memory/.gitignore
+  echo "sessions/*/*/snapshots/*.json" > .memory/.gitignore
   echo "Initialized local Memory Vault at .memory/"
 fi
 

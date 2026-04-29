@@ -53,4 +53,4 @@ Monitor the swarm and automatically apply corrective measures if errors occur.
         - **Suspend**: Immediately stop all active `invoke_agent` calls in the failing branch.
         - **Collapse**: Move the task from a **Parallel** worker to a **Serial** execution queue handled directly by the **Root** agent.
         - **Root Triage**: The Root agent takes over the file context, diagnoses the failure, and applies the fix.
-4.  **Logging**: Document the escalation/collapse event in `.memory/LOGS.md` and update `.memory/TASKS.json`.
+4.  **Logging**: Document the escalation/collapse event in `.memory/sessions/[session_id]/[query_id]/LOGS.md` and update `.memory/sessions/[session_id]/[query_id]/TASKS.json`.

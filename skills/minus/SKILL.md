@@ -14,7 +14,7 @@ Coordinate multiple sub-agents to deliver a complex feature in parallel.
     - **Tool Scoping**: The Orchestrator applies the "Tool Scalpel" to restricted worker branches.
 3.  **Swarm Execution**:
     - Spawn sub-agents (via `invoke_agent`) based on the tagged topology (Parallel/Hierarchical).
-    - **Monitor**: Update `.memory/LOGS.md` with real-time agent heartbeats.
+    - **Monitor**: Update `.memory/sessions/[session_id]/[query_id]/LOGS.md` with real-time agent heartbeats.
 4.  **Resilience**:
     - If an agent fails, the Orchestrator triggers a "Topology Collapse" to Serial mode.
 5.  **Conflict Management**:

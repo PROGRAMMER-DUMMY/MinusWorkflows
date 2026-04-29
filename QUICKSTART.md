@@ -74,7 +74,7 @@ Gemini, architect: a webhook delivery system with retry logic
 
 ### Implement from an existing PRD
 ```
-Gemini, builder: .memory/PRD_webhook_delivery.md
+Gemini, builder: .memory/sessions/[session_id]/[query_id]/PRD_webhook_delivery.md
 ```
 
 ### Fix a bug
@@ -156,3 +156,4 @@ Opens a D3.js graph in your browser showing the full dependency structure of you
 - Edit `.memory/CONTEXT.md` to define domain vocabulary and non-negotiable constraints
 - Review `skills/minus/SKILL.md` to see exactly what the orchestrator does at each phase
 - Run `uvx code-review-graph status --json` to inspect the current structural snapshot
+ the current structural snapshot

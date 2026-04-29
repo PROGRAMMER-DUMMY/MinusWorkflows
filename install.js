@@ -39,17 +39,25 @@ if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
 }
 
-function copyRecursive(src, dest) {
-    if (fs.statSync(src).isDirectory()) {
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest);
-        fs.readdirSync(src).forEach(child => copyRecursive(path.join(src, child), path.join(dest, child)));
-    } else {
-        fs.copyFileSync(src, dest);
+function linkSkills(srcDir, destDir) {
+    if (!fs.existsSync(srcDir)) return;
+    
+    const skills = fs.readdirSync(srcDir);
+    for (const skill of skills) {
+        const srcPath = path.join(srcDir, skill);
+        const destPath = path.join(destDir, skill);
+        
+        if (fs.statSync(srcPath).isDirectory()) {
+            if (fs.existsSync(destPath)) {
+                fs.rmSync(destPath, { recursive: true, force: true });
+            }
+            fs.symlinkSync(srcPath, destPath, 'junction');
+        }
     }
 }
 
-copyRecursive(repoSkillsDir, targetDir);
-console.log('Skills injected into .gemini/skills/');
+linkSkills(repoSkillsDir, targetDir);
+console.log('Skills linked to .gemini/skills/ (auto-updating enabled)');
 
 const contextPath = path.join(process.cwd(), 'CONTEXT.md');
 if (!fs.existsSync(contextPath)) {
@@ -61,8 +69,8 @@ if (!fs.existsSync(contextPath)) {
 const memoryDir = path.join(process.cwd(), '.memory');
 if (!fs.existsSync(memoryDir)) {
     fs.mkdirSync(memoryDir);
-    fs.mkdirSync(path.join(memoryDir, 'snapshots'));
-    fs.writeFileSync(path.join(memoryDir, '.gitignore'), 'snapshots/*.json');
+    fs.mkdirSync(path.join(memoryDir, 'sessions'));
+    fs.writeFileSync(path.join(memoryDir, '.gitignore'), 'sessions/*/*/snapshots/*.json');
     fs.writeFileSync(path.join(memoryDir, 'INDEX.md'), '# Knowledge Graph Index\n\n[[Decisions]]\n[[Lessons-Learned]]\n[[Evolution]]');
     fs.writeFileSync(path.join(memoryDir, 'EVOLUTION.md'), '# Evolutionary Heuristics\n\n> This file tracks Scenarios, Failures, and Validated Fallbacks to improve AI performance on this project.\n\n## Heuristics Tree\n\n- No data yet. Build something to evolve.');
     console.log('Initialized local Memory Vault at .memory/');

@@ -2,7 +2,7 @@ import json
 import os
 
 class AdaptiveSwarm:
-    def __init__(self, tasks_file=".memory/TASKS.json"):
+    def __init__(self, tasks_file=".memory/sessions/test_session/test_query/TASKS.json"):
         self.tasks_file = tasks_file
         self.tasks_data = self._load_tasks()
 
@@ -197,3 +197,6 @@ if __name__ == "__main__":
     # Cleanup
     if os.path.exists(".memory/TASKS_test.json"):
         os.remove(".memory/TASKS_test.json")
+
+    if os.path.exists(".memory/sessions/test_session/test_query/TASKS_test.json"):
+        os.remove(".memory/sessions/test_session/test_query/TASKS_test.json")

@@ -89,7 +89,7 @@ graph TD
 | `architect` | Combines grill-me → domain-model → to-prd → auditor into one phase. |
 | `grill-me` | One-question-at-a-time design interview. Exhausts unknowns before code is written. |
 | `domain-model` | Validates new plans against the project's `CONTEXT.md` vocabulary and mandates. |
-| `to-prd` | Generates a formal spec from grilled decisions. Saved to `.memory/PRD_[feature].md`. |
+| `to-prd` | Generates a formal spec from grilled decisions. Saved to `.memory/sessions/[session_id]/[query_id]/PRD_[feature].md`. |
 | `to-issues` | Slices a PRD into atomic, dependency-mapped implementation tasks. |
 
 ### Execution & Safety
@@ -169,6 +169,11 @@ Gemini, maintainer: [bug or issue]     # Fix & improve
 ```
 
 See [QUICKSTART.md](QUICKSTART.md) for a step-by-step first run.
+
+---
+
+Built for AI-native engineers who ship.
+ee [QUICKSTART.md](QUICKSTART.md) for a step-by-step first run.
 
 ---
 

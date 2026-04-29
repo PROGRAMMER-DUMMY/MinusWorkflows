@@ -11,7 +11,7 @@ Analyze the session to refine the project's "Heuristics Tree."
 3. **Fallback Extraction**: Identify the specific path that eventually succeeded.
 4. **Snapshot Generation**:
    - Run `uvx code-review-graph status --json` to capture the current structural state.
-   - Save a versioned delta to `.memory/snapshots/v_[timestamp].json`.
+   - Save a versioned delta to `.memory/sessions/[session_id]/[query_id]/snapshots/v_[timestamp].json`.
 5. **Knowledge Injection**: 
    - Update `.memory/EVOLUTION.md` with the new **Scenario -> Failure -> Fallback** pattern.
    - **If `ALLOW_EVOLVING_GUARDRAILS` is true**: Update the `enforcer` safety rules or `CONTEXT.md` with new project-specific constraints.

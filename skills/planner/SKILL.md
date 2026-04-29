@@ -24,5 +24,5 @@ Transform the high-level PRD into a surgical execution graph.
 6. **Context Requirements**: List exactly which files and skills will be needed for each step.
 7. **Phase 7: Cleanup**: Activate `evolve`. Activate `enforcer`. Prep for Implementation.
 **Output**: 
-- `.memory/ROADMAP.md`: Human-readable task graph.
-- `.memory/TASKS.json`: Machine-readable dependency tree with metadata (`type`, `risk`, `complexity`) for the Intelligence Router.
+- `.memory/sessions/[session_id]/[query_id]/ROADMAP.md`: Human-readable task graph.
+- `.memory/sessions/[session_id]/[query_id]/TASKS.json`: Machine-readable dependency tree with metadata (`type`, `risk`, `complexity`) for the Intelligence Router.

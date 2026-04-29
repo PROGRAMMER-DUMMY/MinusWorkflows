@@ -10,4 +10,4 @@ Slice the work into vertical "Tracer Bullets."
 2. **Dependency Mapping**: Clearly state which issues must be finished before others can start.
 3. **Verification Steps**: Every task must include a "How to Test" section.
 
-**Output**: Save the task list to `.memory/TASKS.md` or create GitHub issues if requested.
+**Output**: Save the task list to `.memory/sessions/[session_id]/[query_id]/TASKS.md` or create GitHub issues if requested.
