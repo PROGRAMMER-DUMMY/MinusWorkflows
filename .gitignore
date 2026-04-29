@@ -7,9 +7,21 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Environments and IDEs
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.idea/
+.vscode/
+
+# Tools
+.claude/
+.gemini/
+
 # Project Data (Ignore local memory contents, keep the harness)
 .memory/*
 !.memory/INDEX.md
-
-# Local Gemini Config
-.gemini/
+.vault/sandbox/
+.code-review-graph/
+*.db
