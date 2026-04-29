@@ -130,9 +130,12 @@ your-project/
 ├── .memory/
 │   ├── CONTEXT.md          # Domain language and mandates
 │   ├── EVOLUTION.md        # Scenario → Failure → Fallback log
-│   ├── ROADMAP.md          # Human-readable task graph
-│   ├── TASKS.json          # Machine-readable dependency tree
-│   └── snapshots/          # Versioned structural deltas
+│   └── sessions/           
+│       └── [session_id]/
+│           └── [query_id]/
+│               ├── ROADMAP.md          # Human-readable task graph
+│               ├── TASKS.json          # Machine-readable dependency tree
+│               └── snapshots/          # Versioned structural deltas
 ├── .vault/
 │   ├── backups/            # Verified golden states
 │   ├── sandbox/            # Isolated experiment space
@@ -169,11 +172,6 @@ Gemini, maintainer: [bug or issue]     # Fix & improve
 ```
 
 See [QUICKSTART.md](QUICKSTART.md) for a step-by-step first run.
-
----
-
-Built for AI-native engineers who ship.
-ee [QUICKSTART.md](QUICKSTART.md) for a step-by-step first run.
 
 ---
 

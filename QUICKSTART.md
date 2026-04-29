@@ -120,8 +120,8 @@ Each entry follows: **Scenario → Failure → Fallback**. Next time the AI hits
 | :--- | :--- |
 | `.memory/CONTEXT.md` | Domain language and architectural mandates. Set hard constraints here. |
 | `.memory/EVOLUTION.md` | Accumulated Scenario → Failure → Fallback patterns |
-| `.memory/TASKS.json` | Current task dependency tree (machine-readable) |
-| `.memory/ROADMAP.md` | Current task dependency tree (human-readable) |
+| `.memory/sessions/[session_id]/[query_id]/TASKS.json` | Current task dependency tree (machine-readable) |
+| `.memory/sessions/[session_id]/[query_id]/ROADMAP.md` | Current task dependency tree (human-readable) |
 | `.vault/INDEX.md` | Map of all golden-state backups and snapshots |
 | `.code-review-graph/graph.db` | SQLite structural dependency graph |
 
@@ -156,4 +156,3 @@ Opens a D3.js graph in your browser showing the full dependency structure of you
 - Edit `.memory/CONTEXT.md` to define domain vocabulary and non-negotiable constraints
 - Review `skills/minus/SKILL.md` to see exactly what the orchestrator does at each phase
 - Run `uvx code-review-graph status --json` to inspect the current structural snapshot
- the current structural snapshot

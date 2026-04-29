@@ -124,10 +124,10 @@ def test_topology_selection():
             {"id": "2", "dependencies": [], "files": ["file2.py"]}
         ]
     }
-    with open(".memory/TASKS_test.json", "w") as f:
+    with open(".memory/sessions/test_session/test_query/TASKS_test.json", "w") as f:
         json.dump(parallel_tasks, f)
     
-    swarm = AdaptiveSwarm(tasks_file=".memory/TASKS_test.json")
+    swarm = AdaptiveSwarm(tasks_file=".memory/sessions/test_session/test_query/TASKS_test.json")
     assert swarm.select_topology() == "Parallel"
 
     # Mock TASKS.json for hierarchical (overlap)
@@ -137,10 +137,10 @@ def test_topology_selection():
             {"id": "2", "dependencies": ["1"], "files": ["shared.py"]}
         ]
     }
-    with open(".memory/TASKS_test.json", "w") as f:
+    with open(".memory/sessions/test_session/test_query/TASKS_test.json", "w") as f:
         json.dump(hierarchical_tasks, f)
     
-    swarm = AdaptiveSwarm(tasks_file=".memory/TASKS_test.json")
+    swarm = AdaptiveSwarm(tasks_file=".memory/sessions/test_session/test_query/TASKS_test.json")
     assert swarm.select_topology() == "Hierarchical"
     print("test_topology_selection passed!")
 
@@ -195,8 +195,8 @@ if __name__ == "__main__":
     test_intelligence_routing()
     test_model_escalation()
     # Cleanup
-    if os.path.exists(".memory/TASKS_test.json"):
-        os.remove(".memory/TASKS_test.json")
+    if os.path.exists(".memory/sessions/test_session/test_query/TASKS_test.json"):
+        os.remove(".memory/sessions/test_session/test_query/TASKS_test.json")
 
     if os.path.exists(".memory/sessions/test_session/test_query/TASKS_test.json"):
         os.remove(".memory/sessions/test_session/test_query/TASKS_test.json")
