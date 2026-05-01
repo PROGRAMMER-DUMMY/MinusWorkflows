@@ -109,6 +109,10 @@ graph TD
 | `scanner.js` | Autodetects available AI models via environment variables, CLI tools, or `.memory/models.json`. |
 | `budget_tracker.js` | Enforces session budgets and prompts for confirmation before invoking expensive Ultra-tier models. |
 | `ocr-memory` | Interface with the OCR-Memory service to store trajectories and retrieve context from the memory bank. |
+| `gitagent` | Expert Git workflow automation (branching, commits, PRs). |
+| `git-guardrails` | Prevents dangerous git commands (force-push, hard-reset) via hooks. |
+| `github-triage` | Label-based GitHub issue management and agent-briefing. |
+| `setup-pre-commit` | Configures Husky, lint-staged, and Prettier for the repo. |
 
 ### Context Engineering
 
