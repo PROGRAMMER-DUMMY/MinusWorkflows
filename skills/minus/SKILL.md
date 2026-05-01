@@ -7,8 +7,7 @@ description: The Master Orchestrator. Executes the entire project lifecycle (Arc
 Coordinate multiple sub-agents to deliver a complex feature in parallel.
 
 -1. **Global Sync (CRITICAL)**:
-    - ALWAYS execute `uvx code-review-graph update` via the shell *before* attempting to answer the user, classify intent, or route the task. This ensures the structural graph is always synchronized.
-    - **Skill Sync**: If a new skill directory is detected in `skills/` that isn't yet linked to the CLI, run `node install.js` and notify the user: "✦ New skills detected. Synchronizing skill stack...".
+    - ALWAYS execute `uvx code-review-graph update` via the shell *before* attempting to answer the user, classify intent, or route the task. The system must never guess the state of the codebase, even for advice or small fixes.
 
 0.  **Intent Classification & Triage (New)**:
     - **Document Ingestion (Full Exploration)**: If the user provides a file path (e.g., a Markdown document, a Jira export), you MUST use `read_file` to ingest it entirely. If the file is truncated, you MUST make subsequent `read_file` calls (using `start_line`) to read the complete document. You must fully scan and extract all architectural findings, constraints, and dependencies before deciding.
