@@ -102,7 +102,15 @@ Switch tiers mid-session to manage cost and speed:
 
 ---
 
-## Step 6 — Check What the System Learned
+## Step 6 — Model Selection & Budget
+
+The minusWorkflows orchestrator is cost-aware. You can configure your available models and session budgets:
+- **Models:** The system automatically scans for `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or installed CLIs. You can also explicitly define models in `.memory/models.json`.
+- **Budget:** Before spinning up an expensive "Ultra" tier model (like Gemini 1.5 Pro or Claude 3.5 Opus), the orchestrator will prompt you for confirmation or gracefully degrade based on your budget settings.
+
+---
+
+## Step 7 — Check What the System Learned
 
 After any session, review the evolution log:
 

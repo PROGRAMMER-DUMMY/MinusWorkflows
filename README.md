@@ -101,6 +101,14 @@ graph TD
 | `auditor` | Quality gate at every phase transition. Blocks drift and security regressions. |
 | `vault-harness` | Sandbox isolation for experimental code + golden-state backup to `.vault/`. |
 
+### Intelligence & Routing
+
+| Skill / Utility | Role |
+| :--- | :--- |
+| `control-pane` | Dynamic model selection and escalation. Maps task metadata to AI model tiers (Flash vs Pro). |
+| `scanner.js` | Autodetects available AI models via environment variables, CLI tools, or `.memory/models.json`. |
+| `budget_tracker.js` | Enforces session budgets and prompts for confirmation before invoking expensive Ultra-tier models. |
+
 ### Context Engineering
 
 | Skill | Role |

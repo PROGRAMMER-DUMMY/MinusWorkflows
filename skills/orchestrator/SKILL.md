@@ -26,16 +26,18 @@ Select the optimal model tier for each task using the `control-pane` skill.
 2.  **State Tracking**:
     - Update `TASKS.json` with the current `model_tier` and `failure_count` for each task.
 
-## Phase: Tool Scoping (The Tool Scalpel)
-Restrict sub-agent capabilities based on their role in the topology to prevent context bloat and ensure surgical edits.
+## Phase: Tool Scoping & Context Engineering
+Restrict sub-agent capabilities and knowledge based on their role in the topology to prevent context bloat and ensure surgical edits.
 
 1.  **Enforcement Protocol**:
-    - Before `invoke_agent`, the Orchestrator MUST inject a `tool_filter` instruction into the sub-agent's prompt.
+    - Before `invoke_agent`, the Orchestrator MUST construct a tailored prompt that includes a `tool_filter` and a strictly scoped `Personal Context`.
     - **Supervisor/Root**:
         - **Access**: Full toolset (Standard + Administrative).
-        - **Context Management**: Responsible for high-level plan and state sync.
+        - **Context Management**: Responsible for high-level plan and state sync. Full access to `CONTEXT.md`.
         - **Token Budget**: 100% capacity.
     - **Worker (Parallel/Hierarchical Branch)**:
+        - **Personal Context**: Assign a specific role (e.g., "Database Expert") via `.memory/profiles.json`. Pass ONLY the subset of `CONTEXT.md` relevant to the task's direct file dependencies.
+        - **Model Assignment**: The `prompt` sent to the sub-agent MUST explicitly declare the `model_tier` authorized by the `control-pane` (e.g., "Execute this task using the Gemini Flash tier profile").
         - **Allowed (Surgical)**: `replace`, `read_file`, `grep_search`, `glob`.
         - **Restricted (Write-Heavy)**: `write_file` (allowed only for NEW files, blocked for existing).
         - **Blocked (System-wide)**: `run_shell_command` (unless whitelisted for specific build commands), `invoke_agent` (to prevent infinite nesting).
