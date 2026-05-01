@@ -6,6 +6,11 @@ description: The Master Orchestrator. Executes the entire project lifecycle (Arc
 ## Phase: Orchestration (Master Swarm)
 Coordinate multiple sub-agents to deliver a complex feature in parallel.
 
+0.  **Triage & Fast-Track (New)**:
+    - Evaluate the user's request. If it is a simple fix, typo, or minor isolated change (low complexity/low risk), **BYPASS** the `architect` and `planner` phases entirely.
+    - Route directly to the `maintainer` skill or execute immediately on the main thread to prevent bureaucracy overkill.
+    - For all other complex features, proceed to step 1.
+
 1.  **Architecture & Planning**:
     - Activate `architect` then `planner`.
     - Output: A dependency-aware `TASKS.json` tree with topology tags.

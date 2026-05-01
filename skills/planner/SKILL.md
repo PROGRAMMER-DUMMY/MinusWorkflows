@@ -6,7 +6,7 @@ description: Bridges the PRD to implementation by generating a dependency-aware 
 ## Phase: Planning
 Transform the high-level PRD into a surgical execution graph.
 
-0. **Structural Sync**: Activate `minustoken L2`. ALWAYS RUN `uvx code-review-graph build` (or `update`) before planning to ensure the graph matches the current file state.
+0. **Structural Sync (CRITICAL)**: Activate `minustoken L2`. You MUST execute the shell command `uvx code-review-graph update` before planning begins. Do not assume the graph is synced. This prevents silent integration failures.
 1. **Dependency Analysis**: Use the graph to identify which components are downstream and must be built first.
 2. **Deepening Discovery**: Identify "Architectural Debt" (e.g., tight coupling, missing abstractions) that should be refactored alongside the new feature.     
 3. **Topology Tagging**:
