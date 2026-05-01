@@ -6,10 +6,14 @@ description: The Master Orchestrator. Executes the entire project lifecycle (Arc
 ## Phase: Orchestration (Master Swarm)
 Coordinate multiple sub-agents to deliver a complex feature in parallel.
 
-0.  **Triage & Fast-Track (New)**:
-    - Evaluate the user's request. If it is a simple fix, typo, or minor isolated change (low complexity/low risk), **BYPASS** the `architect` and `planner` phases entirely.
-    - Route directly to the `maintainer` skill or execute immediately on the main thread to prevent bureaucracy overkill.
-    - For all other complex features, proceed to step 1.
+0.  **Intent Classification & Triage (New)**:
+    - **Document Ingestion**: If the user provides a file path (e.g., a Markdown document, a Jira export), use `read_file` to analyze its completeness.
+        - *Rough Idea / Incomplete*: Route to `architect` to grill the user and finalize the PRD.
+        - *Bug Report / Stack Trace*: Route to `maintainer` and `diagnose`.
+        - *Complete Actionable PRD*: Bypass `architect` entirely and route directly to `planner`.
+    - **Fast-Track**: If the user request is just text (no file) and is a simple fix or isolated change, **BYPASS** the heavy `architect` and `planner` phases. Route directly to `maintainer`.
+    - **CRITICAL**: Even for fast-tracked tasks or pre-planned documents, you MUST jump to **Phase 8: Final Evolution** (`evolve`) once complete, ensuring the outcome is logged in `.memory/EVOLUTION.md`.
+    - For all other standard complex requests, proceed to step 1.
 
 1.  **Architecture & Planning**:
     - Activate `architect` then `planner`.
