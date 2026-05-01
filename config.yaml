@@ -1,0 +1,42 @@
+# OCR-Memory Configuration (Modifier File)
+# Use this file to toggle storage backends and model providers (CLI or API).
+
+storage:
+  # Options: "local" | "s3" | "gcs"
+  backend: "local"
+  local:
+    path: "memory_bank"
+  s3:
+    bucket: "your-memory-bucket"
+    region: "us-east-1"
+    endpoint: "https://s3.amazonaws.com"
+
+database:
+  # PostgreSQL connection string (overrides DATABASE_URL env var if present)
+  url: "postgresql://user:pass@localhost/ocrmemory"
+
+cache:
+  # Redis connection string (overrides REDIS_URL env var if present)
+  url: "redis://127.0.0.1/"
+
+retriever:
+  # DEFAULT MODE: cli
+  # Options: "cli" | "api" | "local_server"
+  mode: "cli"
+
+  # CLI-Based Models (gemini, claude-code, etc.)
+  cli:
+    command: "gemini" # The CLI command to invoke
+    args: ["--prompt", "{prompt}", "--image", "{image_path}"]
+    timeout_ms: 30000
+
+  # API-Based Providers (Gemini, Claude, OpenAI)
+  api:
+    provider: "gemini" # options: gemini, claude, openai
+    api_key: "YOUR_API_KEY"
+    model: "gemini-2.0-flash"
+
+  # Open Source / Local Inference (Ollama, Local vLLM, DeepSeek)
+  local_server:
+    endpoint: "http://localhost:11434/api/generate" # e.g., Ollama
+    model: "llama3-vision"

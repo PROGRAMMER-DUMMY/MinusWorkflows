@@ -43,6 +43,16 @@ Restrict sub-agent capabilities and knowledge based on their role in the topolog
         - **Blocked (System-wide)**: `run_shell_command` (unless whitelisted for specific build commands), `invoke_agent` (to prevent infinite nesting).
         - **Token Budget**: Max 40% capacity. Use `enforcer` to prune history after every 3 turns.
 
+## Phase: Adaptive Memory Control
+The Orchestrator manages the transition between local and persistent memory systems to optimize token usage and context retention.
+
+1.  **Switch Logic**:
+    - Monitor `turn_count` and `total_tokens` for the current session.
+    - **Local Path**: If `turn_count < 5` AND `total_tokens < 4000`, continue using standard session history.
+    - **Persistent Path**: If `turn_count >= 5` OR `total_tokens >= 4000`, the Orchestrator MUST invoke the `ocr-memory` skill and trigger a `POST /memory/store` for the current trajectory.
+2.  **Enforcement Protocol**:
+    - When the persistent threshold is met, ensure all sub-agents are informed of the switch and use the `ocr-memory` service for any subsequent context retrieval.
+
 ## Phase: Resilient Fallback (Collapse & Escalate)
 Monitor the swarm and automatically apply corrective measures if errors occur.
 

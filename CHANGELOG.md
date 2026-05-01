@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Unified Configuration (Modifier File):** Introduced `config.yaml` as a single point of control for storage backends (Local, S3, GCS) and model providers (CLI, API, Local Server).
+- **CLI-Native Retrieval:** Default retrieval mode is now set to `cli` using the `gemini` CLI for high-speed, local-first operations.
+- **Multi-Backend Storage:** Abstracted storage logic to support cloud backends like AWS S3 and GCS alongside the local memory bank.
 - **Dynamic Model Routing:** Orchestrator now uses a scanner (`utils/scanner.js`) to detect available AI models via environment variables, CLI configurations, and explicit configs (`.memory/models.json`).
 - **Cost Awareness & Budgeting:** Introduced `utils/budget_tracker.js` to handle tiered budgeting (low, medium, unlimited), hard limits, and confirmation prompts for expensive Ultra-tier models.
 - **Scoped Personal Context:** Sub-agents now receive a strictly scoped subset of `CONTEXT.md` based on their assigned role and dependencies to prevent context bloat.

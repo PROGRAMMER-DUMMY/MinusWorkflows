@@ -122,6 +122,29 @@ Each entry follows: **Scenario → Failure → Fallback**. Next time the AI hits
 
 ---
 
+## Step 8 — Configuration (The Modifier File)
+
+The system is controlled via `config.yaml`. 
+
+1. **Set Storage Backend**:
+   Edit `config.yaml` to switch between `local` and `s3`:
+   ```yaml
+   storage:
+     backend: "s3"
+     s3:
+       bucket: "my-bucket"
+   ```
+
+2. **Select Model Provider**:
+   By default, the system uses the `gemini` CLI. You can switch to an API:
+   ```yaml
+   retriever:
+     mode: "api"
+     api:
+       provider: "gemini"
+       api_key: "AIza..."
+   ```
+
 ## Key Files
 
 | File | Purpose |

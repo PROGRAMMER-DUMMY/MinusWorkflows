@@ -108,6 +108,7 @@ graph TD
 | `control-pane` | Dynamic model selection and escalation. Maps task metadata to AI model tiers (Flash vs Pro). |
 | `scanner.js` | Autodetects available AI models via environment variables, CLI tools, or `.memory/models.json`. |
 | `budget_tracker.js` | Enforces session budgets and prompts for confirmation before invoking expensive Ultra-tier models. |
+| `ocr-memory` | Interface with the OCR-Memory service to store trajectories and retrieve context from the memory bank. |
 
 ### Context Engineering
 
@@ -131,28 +132,53 @@ graph TD
 
 ---
 
-## Project Layout After Installation
+## Project Layout & Documentation
 
 ```
-your-project/
+minusWorkflows/
+├── docs/                   # Authoritative Record of Project Upgrades
+│   ├── plans/              # Architectural evolution strategies
+│   ├── prds/               # Feature-specific requirement documents
+│   └── tasks/              # High-level execution roadmaps
 ├── .memory/
-│   ├── CONTEXT.md          # Domain language and mandates
+│   ├── CONTEXT.md          # Domain language and internal mandates
 │   ├── EVOLUTION.md        # Scenario → Failure → Fallback log
 │   └── sessions/           
-│       └── [session_id]/
-│           └── [query_id]/
-│               ├── ROADMAP.md          # Human-readable task graph
-│               ├── TASKS.json          # Machine-readable dependency tree
-│               └── snapshots/          # Versioned structural deltas
+│       └── [session_id]/   # Per-query execution context
 ├── .vault/
 │   ├── backups/            # Verified golden states
-│   ├── sandbox/            # Isolated experiment space
-│   └── INDEX.md            # Wikilink map of snapshots and ADRs
-└── .code-review-graph/
-    └── graph.db            # SQLite dependency graph
+│   └── sandbox/            # Isolated experiment space
+├── skills/                 # High-precision AI engineering skill stack
+└── ocr_memory_rust/        # High-performance Visual Memory Engine (Internal)
 ```
 
+
 ---
+
+## Configuration (The Modifier File)
+
+OCR-Memory uses a single `config.yaml` file to manage all system settings. You can swap storage backends (Local vs S3) and model providers (CLI vs API) without changing any code.
+
+### Key Features
+- **Storage Backends**: Support for Local Filesystem, AWS S3, and GCS.
+- **Model Modes**: 
+  - `cli`: Invoke local CLI tools like `gemini` or `claude-code`.
+  - `api`: Connect to managed vision APIs (Gemini, Claude, OpenAI).
+  - `local_server`: Connect to local inference engines (Ollama, vLLM).
+
+### Example `config.yaml`
+```yaml
+storage:
+  backend: "local" # or "s3"
+  local:
+    path: "memory_bank"
+
+retriever:
+  mode: "cli"
+  cli:
+    command: "gemini"
+    args: ["--prompt", "{prompt}", "--image", "{image_path}"]
+```
 
 ## Installation
 

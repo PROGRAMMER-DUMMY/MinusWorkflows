@@ -6,8 +6,11 @@ description: The Master Orchestrator. Executes the entire project lifecycle (Arc
 ## Phase: Orchestration (Master Swarm)
 Coordinate multiple sub-agents to deliver a complex feature in parallel.
 
+-1. **Global Sync (CRITICAL)**:
+    - ALWAYS execute `uvx code-review-graph update` via the shell *before* attempting to answer the user, classify intent, or route the task. The system must never guess the state of the codebase, even for advice or small fixes.
+
 0.  **Intent Classification & Triage (New)**:
-    - **Document Ingestion**: If the user provides a file path (e.g., a Markdown document, a Jira export), use `read_file` to analyze its completeness.
+    - **Document Ingestion (Full Exploration)**: If the user provides a file path (e.g., a Markdown document, a Jira export), you MUST use `read_file` to ingest it entirely. If the file is truncated, you MUST make subsequent `read_file` calls (using `start_line`) to read the complete document. You must fully scan and extract all architectural findings, constraints, and dependencies before deciding.
         - *Rough Idea / Incomplete*: Route to `architect` to grill the user and finalize the PRD.
         - *Bug Report / Stack Trace*: Route to `maintainer` and `diagnose`.
         - *Complete Actionable PRD*: Bypass `architect` entirely and route directly to `planner`.
