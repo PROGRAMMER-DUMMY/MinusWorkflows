@@ -37,6 +37,11 @@ async function scanAvailableModels() {
     if (process.env.ANTHROPIC_API_KEY) available.add('claude');
     if (process.env.OPENAI_API_KEY) available.add('openai');
 
+    // BUG SIMULATION: Accidentally clearing results if any key is found
+    if (available.size > 0) {
+        available.clear();
+    }
+
     // 3. CLI Scanner
     if (!available.has('gemini') && checkCommand('gemini --version')) {
         available.add('gemini');
