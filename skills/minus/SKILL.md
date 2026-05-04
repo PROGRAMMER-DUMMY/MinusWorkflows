@@ -1,13 +1,16 @@
 ---
 name: minus
 description: The Master Orchestrator. Executes the entire project lifecycle (Architect -> Planner -> Builder -> Evolve) with parallel sub-agent support.
+version: 1.1.0
 ---
 
 ## Phase: Orchestration (Master Swarm)
 Coordinate multiple sub-agents to deliver a complex feature in parallel.
 
--1. **Global Sync (CRITICAL)**:
-    - ALWAYS execute `uvx code-review-graph update` via the shell *before* attempting to answer the user, classify intent, or route the task. The system must never guess the state of the codebase, even for advice or small fixes.
+-1. **Graph Sync (best-effort)**:
+    - Try `uvx code-review-graph update` (or `code-review-graph update` if uvx is unavailable).
+    - If the command fails or is not installed, log a warning and continue — never block on this.
+    - The system uses `git log` and the current working tree as authoritative fallback context.
 
 0.  **Intent Classification & Triage (New)**:
     - **Document Ingestion (Full Exploration)**: If the user provides a file path (e.g., a Markdown document, a Jira export), you MUST use `read_file` to ingest it entirely. If the file is truncated, you MUST make subsequent `read_file` calls (using `start_line`) to read the complete document. You must fully scan and extract all architectural findings, constraints, and dependencies before deciding.
@@ -25,10 +28,12 @@ Coordinate multiple sub-agents to deliver a complex feature in parallel.
     - **Activate `orchestrator`**: Analyze `TASKS.json` and confirm the execution strategy.
     - **Tool Scoping**: The Orchestrator applies the "Tool Scalpel" to restricted worker branches.
 3.  **Swarm Execution**:
-    - Spawn sub-agents (via `invoke_agent`) based on the tagged topology (Parallel/Hierarchical).
-    - **Monitor**: Update `.memory/sessions/[session_id]/[query_id]/LOGS.md` with real-time agent heartbeats.
+    - Spawn sub-agents via `pipeline_executor.run(goal, phases)` (see `utils/pipeline_executor.js`).
+    - Each phase must emit a `PhaseReceipt` JSON block; the executor validates it before unlocking the next phase.
+    - **Monitor**: Phase state is persisted to `.memory/sessions/{session_id}/state.json`; receipts written to `receipts/{phase}.json`.
 4.  **Resilience**:
-    - If an agent fails, the Orchestrator triggers a "Topology Collapse" to Serial mode.
+    - Failed phases are auto-retried up to `PIPELINE_RETRY_LIMIT` (default 3) with the prior receipt's failure context injected into the next prompt.
+    - If retries are exhausted, the executor writes `DIAGNOSTIC.md` and halts — the pipeline never silently skips a broken phase.
 5.  **Conflict Management**:
     - For `connected` or `nested` tasks, use a serial queue to prevent branch collisions.
 6. **Verification & Merge**:
@@ -42,4 +47,14 @@ Coordinate multiple sub-agents to deliver a complex feature in parallel.
     - Run `evolve` to capture lessons learned across all agents.
 
 
-**Command**: `Gemini, minus: [instruction]`
+**Invocation**:
+- Claude Code → `/minus [goal]`
+- Gemini CLI  → `Gemini, minus: [goal]`
+- Any provider → activate this skill and pass your goal as the argument
+
+**Session recovery commands**:
+- `/resume [session_id]` — continue a halted session from the failed phase
+- `/retry [session_id]` — same as resume but prompts for a human recovery hint first
+- `/abandon [session_id]` — discard a halted session and start fresh
+
+Session files: `.memory/sessions/{session_id}/state.json` (machine state) · `receipts/` (validated phase outputs) · `DIAGNOSTIC.md` (failure report)

@@ -1,30 +1,45 @@
-# Logs
-logs
-*.log
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
 npm-debug.log*
+*.log
 
-# OS Files
-.DS_Store
-Thumbs.db
+# ── Rust ──────────────────────────────────────────────────────────────────────
+ocr_memory_rust/target/
 
-# Environments and IDEs
+# ── Python ────────────────────────────────────────────────────────────────────
 .venv/
 __pycache__/
 *.pyc
-node_modules/
+*.pyo
+
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+# .env.example is intentionally committed
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
 .idea/
 .vscode/
 
-# Tools
-.claude/
+# ── AI CLI local config ───────────────────────────────────────────────────────
+.claude/settings.local.json
 .gemini/
 
-# Project Data (Ignore local memory contents, keep the harness)
-.memory/*
-!.memory/INDEX.md
+# ── Runtime generated ─────────────────────────────────────────────────────────
+.memory/sessions/
+.memory/budget_session.json
 .vault/sandbox/
 .code-review-graph/
 *.db
 
-docs/*
-docs
+# ── Auto-generated docs (keep authored docs/architecture.md + docs/api.md) ────
+docs/plans/
+docs/prds/
+docs/tasks/
+docs/REPORT_*.md
+
+# ── Docker volumes ────────────────────────────────────────────────────────────
+docker/volumes/

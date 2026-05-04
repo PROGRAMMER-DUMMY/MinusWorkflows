@@ -1,6 +1,7 @@
 ---
 name: mapper
 description: Manages the codebase dependency graph and performs blast-radius analysis. Use to identify context requirements and affected components.
+version: 1.0.0
 ---
 
 ## Phase: Mapping

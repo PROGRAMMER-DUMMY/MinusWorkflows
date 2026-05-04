@@ -1,0 +1,111 @@
+# ── MinusWorkflows: OCR-Memory Service ───────────────────────────────────────
+#
+# Three modes, one file. Set MODE in .env and restart.
+#
+#  lite     → disk cache, regex scrubbing, 2 active services (Redis idles)
+#  standard → Redis cache, regex scrubbing, 3 active services
+#  full     → Redis cache, NER scrubbing,  3 active services + pre-baked model
+#
+# Quick start:
+#   cp .env.example .env          # edit POSTGRES_PASSWORD and API_KEY
+#   docker-compose up --build
+#
+# Switching modes:
+#   lite ↔ standard  →  edit MODE= in .env, then: docker-compose restart ocr_engine
+#   → full           →  edit MODE=full in .env, then:
+#                        docker-compose build --build-arg FEATURES=ner
+#                        docker-compose up
+# ─────────────────────────────────────────────────────────────────────────────
+
+version: '3.8'
+
+services:
+
+  db:
+    # pgvector/pgvector includes the vector extension — required for semantic search
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ocrmemory}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ocrmemory
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ocrmemory}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  ocr_engine:
+    # Pre-built image (default) — pulled automatically, no Rust toolchain needed.
+    # Tag is set via OCR_MEMORY_IMAGE in .env (see .env.example).
+    # To build locally instead: comment out `image:` and uncomment `build:`.
+    image: ${OCR_MEMORY_IMAGE:-ghcr.io/programmer-dummy/minusworkflows:latest}
+    # build:
+    #   context: ./ocr_memory_rust
+    #   args:
+    #     FEATURES: ${BUILD_FEATURES:-}
+    environment:
+      MODE: ${MODE:-lite}
+      DATABASE_URL: postgres://${POSTGRES_USER:-ocrmemory}:${POSTGRES_PASSWORD:-changeme}@db:5432/ocrmemory
+      REDIS_URL: redis://redis:6379/
+      RUST_LOG: ${RUST_LOG:-info,ocr_memory_rust=debug}
+
+      # Authentication — set to a strong random string in production
+      API_KEY: ${API_KEY:-}
+
+      # Memory base directory — must match the volume mount path
+      MEMORY_BASE_DIR: /usr/local/bin/memory_bank
+
+      # Vision API (optional — enables optical retrieval path)
+      VISION_BACKEND: ${VISION_BACKEND:-}
+      VISION_MODEL_ANTHROPIC: ${VISION_MODEL_ANTHROPIC:-claude-sonnet-4-6}
+      VISION_MODEL_OPENAI: ${VISION_MODEL_OPENAI:-gpt-4o}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+
+      # Semantic embeddings (optional — enables pgvector search path)
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+
+      # NER model cache (used when FEATURES=ner)
+      HF_HOME: /model_cache
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - memory_bank:/usr/local/bin/memory_bank
+      - cache:/usr/local/bin/cache
+      - model_cache:/model_cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  memory_bank:
+  cache:
+  model_cache:

@@ -1,6 +1,7 @@
 ---
 name: maintainer
 description: Fix and Improve. Combines triage, diagnose, auditor, and improve-codebase-architecture.
+version: 1.0.0
 ---
 
 1. **Phase 1: Triage**: Activate `github-triage`.

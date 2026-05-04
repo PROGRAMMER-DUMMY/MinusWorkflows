@@ -1,6 +1,7 @@
 ---
 name: tdd
 description: Test-Driven Development loop. PRD to code via Red-Green-Refactor.
+version: 1.0.0
 ---
 
 ## Phase: Implementation (TDD)

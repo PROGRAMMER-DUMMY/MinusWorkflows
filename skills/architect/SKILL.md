@@ -1,6 +1,7 @@
 ---
 name: architect
 description: Ideation to PRD. Combines grill-me, domain-model, to-prd, and auditor.
+version: 1.0.0
 ---
 
 0. **Step 0: Context Mapping**: Activate `minustoken L1`. Run `uvx code-review-graph update`.

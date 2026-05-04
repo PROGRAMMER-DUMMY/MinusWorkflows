@@ -1,6 +1,7 @@
 ---
 name: enforcer
 description: Active context engineering tool that prunes the session window to minimize token bloat.
+version: 1.0.0
 ---
 
 ## Phase: Context Engineering & Safety

@@ -3,7 +3,30 @@
     "allow": [
       "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.memory\\\\snapshots\")",
       "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.vault\\\\backups\")",
-      "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.vault\\\\sandbox\")"
+      "Bash(mkdir -p \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\TokenCounter\\\\.vault\\\\sandbox\")",
+      "Bash(node utils/skill_registry.js)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\MinusWorkflows\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\MinusWorkflows\" -Recurse -Force -ErrorAction SilentlyContinue | Select-Object -Property FullName | Sort-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\MinusWorkflows\\\\\", \"\"\\) })",
+      "Bash(grep -E \"\\\\.\\(js|md|json|sh|yaml|yml\\)$\")",
+      "Bash(xargs wc *)",
+      "Bash(node -e \"require\\('./utils/tracer'\\); require\\('./utils/phase_verifier'\\); require\\('./utils/agent_runner'\\); require\\('./utils/pipeline_executor'\\); console.log\\('all modules load OK'\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node bin/minus.js --version)",
+      "Bash(node bin/minus.js trace demo-trace-session)",
+      "Bash(node bin/minus.js --help)",
+      "Bash(findstr /C:\"trace\" /C:\"IDLE\" /C:\"CONTEXT\" /C:\"VERIFY\")",
+      "Bash(Select-String \"trace|IDLE|CONTEXT|VERIFY\")",
+      "Bash(node scripts/test_pipeline.js)",
+      "Bash(node -e \"const b = require\\('./bin/minus.js'\\)\")",
+      "Bash(node -e \"const m = require\\('./bin/minus.js'\\); \")",
+      "Bash(node -e \"require\\('./bin/minus.js'\\)\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\shubh\\\\OneDrive\\\\Desktop\\\\MinusWorkflows\\\\.github\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object FullName)",
+      "Bash(npm run *)",
+      "Bash(npm_config_global=true node scripts/postinstall.js)",
+      "Bash(git add *)"
     ]
   }
 }

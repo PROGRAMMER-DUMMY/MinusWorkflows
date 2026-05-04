@@ -1,28 +1,67 @@
 {
   "name": "minus-workflows",
-  "version": "1.0.0",
-  "description": "High-precision AI engineering skill stack for Gemini CLI",
+  "version": "2.0.0",
+  "description": "Production-ready AI engineering pipeline — multi-phase agents with real test verification, crash recovery, cost tracking, and durable memory. Works with Claude Code, Gemini CLI, and any OpenAI-compatible API.",
   "main": "install.js",
   "bin": {
+    "minus":      "bin/minus.js",
     "minus-init": "install.js"
   },
   "files": [
+    "bin/",
     "install.js",
     "skills/",
-    "templates/",
+    "utils/",
+    "scripts/",
+    "docs/",
+    "docker-compose.yml",
     "README.md",
-    "QUICKSTART.md"
+    "CHANGELOG.md",
+    ".env.example"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall":  "node scripts/postinstall.js",
+    "benchmark":    "node scripts/benchmark.js",
+    "report":       "node scripts/generate_report.js",
+    "skills":       "node utils/skill_registry.js",
+    "prune-memory": "node utils/memory_pruner.js",
+    "keys":         "node utils/key_manager.js",
+    "retention":    "node scripts/retention_cron.js",
+    "harness":      "node scripts/test_harness.js",
+    "test-pipeline":"node scripts/test_pipeline.js",
+    "test":         "node scripts/test_harness.js"
   },
   "keywords": [
+    "claude",
+    "claude-code",
     "gemini",
     "ai-agent",
+    "ai-pipeline",
     "workflows",
     "automation",
-    "engineering"
+    "engineering",
+    "ocr-memory",
+    "multi-provider",
+    "llm",
+    "agentic"
   ],
-  "author": "",
-  "license": "MIT"
+  "author": "PROGRAMMER-DUMMY",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PROGRAMMER-DUMMY/MinusWorkflows.git"
+  },
+  "homepage": "https://github.com/PROGRAMMER-DUMMY/MinusWorkflows#readme",
+  "bugs": {
+    "url": "https://github.com/PROGRAMMER-DUMMY/MinusWorkflows/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "gpt-tokenizer": "^2.1.2",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "xml2js": "^0.6.2"
+  }
 }

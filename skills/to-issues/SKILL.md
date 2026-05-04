@@ -1,6 +1,7 @@
 ---
 name: to-issues
 description: Breaks a PRD or Roadmap into independently-grabbable implementation tasks.
+version: 1.0.0
 ---
 
 ## Phase: Task Breakdown

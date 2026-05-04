@@ -3,21 +3,37 @@ name = "ocr_memory_rust"
 version = "0.1.0"
 edition = "2021"
 
+# Build with `cargo build --release` for lite/standard (no ML model, small binary)
+# Build with `cargo build --release --features ner` for full NER scrubbing
+[features]
+ner = ["candle-core", "candle-transformers", "candle-nn", "tokenizers", "hf-hub"]
+
 [dependencies]
 axum = "0.7"
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
-redis = { version = "0.24", features = ["tokio-comp", "json"] }
+redis = { version = "0.24", features = ["tokio-comp", "json", "connection-manager"] }
 image = "0.24"
 ab_glyph = "0.2"
-reqwest = { version = "0.11", features = ["json", "multipart"] }
-tower-http = { version = "0.5", features = ["cors"] }
+reqwest = { version = "0.12", features = ["json"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
 base64 = "0.21"
-candle-core = "0.3"
-candle-transformers = "0.3"
-candle-nn = "0.3"
-tokenizers = "0.15"
 regex = "1.10"
-hf-hub = "0.3"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+metrics = "0.22"
+metrics-exporter-prometheus = "0.13"
+pgvector = { version = "0.4", features = ["sqlx"] }
+sha2 = "0.10"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Optional: only compiled when `--features ner` is passed
+candle-core = { version = "0.3", optional = true }
+candle-transformers = { version = "0.3", optional = true }
+candle-nn = { version = "0.3", optional = true }
+tokenizers = { version = "0.15", optional = true }
+hf-hub = { version = "0.3", optional = true }

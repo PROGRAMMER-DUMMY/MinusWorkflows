@@ -1,0 +1,99 @@
+name: Release
+
+# Triggered when you push a version tag: git tag v2.0.1 && git push --tags
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+
+  # ── Gate: run unit tests before publishing anything ───────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run test-pipeline
+
+  # ── Docker: build multi-platform image and push to GHCR ──────────────────────
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write   # required to push to ghcr.io
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # QEMU + Buildx for multi-platform builds (amd64 + arm64)
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Lowercase the repo name (GHCR requires lowercase image names)
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      # Tags: vX.Y.Z + vX.Y + latest
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ocr_memory_rust
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Layer cache across runs — keeps rebuild time under 2min after first build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── npm: publish package to npmjs.com ────────────────────────────────────────
+  npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: test   # publish even if Docker is still building
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - run: npm install
+
+      # Strip the leading 'v' from the tag (v2.0.1 → 2.0.1) and sync package.json
+      - name: Sync version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

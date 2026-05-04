@@ -1,6 +1,7 @@
 ---
 name: evolve
 description: Reinforcement learning loop. Analyzes the current session to extract fallbacks and update project intelligence.
+version: 1.0.0
 ---
 
 ## Phase: Self-Evolution

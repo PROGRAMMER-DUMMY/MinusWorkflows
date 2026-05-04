@@ -1,6 +1,7 @@
 ---
 name: agentic
 description: Orchestrates the creation of new Gemini CLI capabilities by combining write-a-skill and skill-creator. Use when you want to extend the agent's power.
+version: 1.0.0
 ---
 
 You are now in the "Agentic" workflow. Your goal is to teach Gemini a new specialized skill:

@@ -1,0 +1,158 @@
+[
+  {
+    "name": "agentic",
+    "description": "Orchestrates the creation of new Gemini CLI capabilities by combining write-a-skill and skill-creator. Use when you want to extend the agent's power.",
+    "version": "1.0.0",
+    "path": "skills/agentic/SKILL.md"
+  },
+  {
+    "name": "architect",
+    "description": "Ideation to PRD. Combines grill-me, domain-model, to-prd, and auditor.",
+    "version": "1.0.0",
+    "path": "skills/architect/SKILL.md"
+  },
+  {
+    "name": "auditor",
+    "description": "Automated quality gate that validates the current state against the original requirements. Use at every phase transition.",
+    "version": "1.0.0",
+    "path": "skills/auditor/SKILL.md"
+  },
+  {
+    "name": "builder",
+    "description": "PRD to Code. Combines planner, to-issues, tdd, and auditor.",
+    "version": "1.0.0",
+    "path": "skills/builder/SKILL.md"
+  },
+  {
+    "name": "control-pane",
+    "description": "Dynamic model selection and escalation engine. Maps task metadata to model tiers and manages intelligence escalation.",
+    "version": "1.0.0",
+    "path": "skills/control-pane/SKILL.md"
+  },
+  {
+    "name": "diagnose",
+    "description": "Disciplined debugging loop for hard bugs and performance regressions. Reproduce -> Hypothesise -> Fix.",
+    "version": "1.0.0",
+    "path": "skills/diagnose/SKILL.md"
+  },
+  {
+    "name": "discovery",
+    "description": "Scans the codebase for architectural patterns, technical debt, and deepening opportunities to inform design recommendations.",
+    "version": "1.0.0",
+    "path": "skills/discovery/SKILL.md"
+  },
+  {
+    "name": "domain-model",
+    "description": "Syncs the plan with the project's domain language and CONTEXT.md.",
+    "version": "1.0.0",
+    "path": "skills/domain-model/SKILL.md"
+  },
+  {
+    "name": "enforcer",
+    "description": "Active context engineering tool that prunes the session window to minimize token bloat.",
+    "version": "1.0.0",
+    "path": "skills/enforcer/SKILL.md"
+  },
+  {
+    "name": "evolve",
+    "description": "Reinforcement learning loop. Analyzes the current session to extract fallbacks and update project intelligence.",
+    "version": "1.0.0",
+    "path": "skills/evolve/SKILL.md"
+  },
+  {
+    "name": "git-guardrails",
+    "description": "Set up hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset.",
+    "version": "1.0.0",
+    "path": "skills/git-guardrails/SKILL.md"
+  },
+  {
+    "name": "gitagent",
+    "description": "Expert Git workflow automation and conflict resolution. Use when the user wants to create new features on branches, manage pull requests, resolve merge conflicts, or perform complex git operations according to industry standards.",
+    "version": "1.0.0",
+    "path": "skills/gitagent/SKILL.md"
+  },
+  {
+    "name": "github-triage",
+    "description": "Triage GitHub issues through a label-based state machine. Use when user wants to create an issue, triage issues, review incoming bugs or feature requests, prepare issues for an AFK agent, or manage issue workflow.",
+    "version": "1.0.0",
+    "path": "skills/github-triage/SKILL.md"
+  },
+  {
+    "name": "grill-me",
+    "description": "Interview the user relentlessly about every aspect of a plan or design until reaching shared understanding.",
+    "version": "1.0.0",
+    "path": "skills/grill-me/SKILL.md"
+  },
+  {
+    "name": "maintainer",
+    "description": "Fix and Improve. Combines triage, diagnose, auditor, and improve-codebase-architecture.",
+    "version": "1.0.0",
+    "path": "skills/maintainer/SKILL.md"
+  },
+  {
+    "name": "mapper",
+    "description": "Manages the codebase dependency graph and performs blast-radius analysis. Use to identify context requirements and affected components.",
+    "version": "1.0.0",
+    "path": "skills/mapper/SKILL.md"
+  },
+  {
+    "name": "minus",
+    "description": "The Master Orchestrator. Executes the entire project lifecycle (Architect -> Planner -> Builder -> Evolve) with parallel sub-agent support.",
+    "version": "1.1.0",
+    "path": "skills/minus/SKILL.md"
+  },
+  {
+    "name": "minustoken",
+    "description": "Density management protocol. Switch tiers to control token usage and speed.",
+    "version": "1.0.0",
+    "path": "skills/minustoken/SKILL.md"
+  },
+  {
+    "name": "ocr-memory",
+    "description": "Instructions for using the OCR-Memory service to store trajectories and retrieve context from the memory bank.",
+    "version": "1.0.0",
+    "path": "skills/ocr-memory/SKILL.md"
+  },
+  {
+    "name": "orchestrator",
+    "description": "The Dynamic Agent Orchestrator. Selects the optimal topology (Parallel, Hierarchical, or Serial) and manages tool scoping for sub-agents.",
+    "version": "1.0.0",
+    "path": "skills/orchestrator/SKILL.md"
+  },
+  {
+    "name": "planner",
+    "description": "Bridges the PRD to implementation by generating a dependency-aware roadmap. Use after the Architect phase.",
+    "version": "1.0.0",
+    "path": "skills/planner/SKILL.md"
+  },
+  {
+    "name": "setup-pre-commit",
+    "description": "Set up Husky pre-commit hooks with lint-staged (Prettier), type checking, and tests in the current repo. Use when user wants to add pre-commit hooks, set up Husky, configure lint-staged, or add commit-time formatting/typechecking/testing.",
+    "version": "1.0.0",
+    "path": "skills/setup-pre-commit/SKILL.md"
+  },
+  {
+    "name": "tdd",
+    "description": "Test-Driven Development loop. PRD to code via Red-Green-Refactor.",
+    "version": "1.0.0",
+    "path": "skills/tdd/SKILL.md"
+  },
+  {
+    "name": "to-issues",
+    "description": "Breaks a PRD or Roadmap into independently-grabbable implementation tasks.",
+    "version": "1.0.0",
+    "path": "skills/to-issues/SKILL.md"
+  },
+  {
+    "name": "to-prd",
+    "description": "Transforms the grilled design decisions into a formal Product Requirements Document (PRD).",
+    "version": "1.0.0",
+    "path": "skills/to-prd/SKILL.md"
+  },
+  {
+    "name": "vault-harness",
+    "description": "Bridges the current session to a long-term Memory Vault (Obsidian or Local). Use to retrieve past decisions, architectural patterns, and \"lessons learned.\"",
+    "version": "1.0.0",
+    "path": "skills/vault-harness/SKILL.md"
+  }
+]

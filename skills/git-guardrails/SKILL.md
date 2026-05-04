@@ -1,6 +1,7 @@
 ---
 name: git-guardrails
 description: Set up hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset.
+version: 1.0.0
 ---
 
 # Setup Git Guardrails

@@ -1,6 +1,7 @@
 ---
 name: gitagent
 description: Expert Git workflow automation and conflict resolution. Use when the user wants to create new features on branches, manage pull requests, resolve merge conflicts, or perform complex git operations according to industry standards.
+version: 1.0.0
 ---
 
 # GitAgent

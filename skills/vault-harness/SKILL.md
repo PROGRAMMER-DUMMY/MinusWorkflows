@@ -1,6 +1,7 @@
 ---
 name: vault-harness
 description: Bridges the current session to a long-term Memory Vault (Obsidian or Local). Use to retrieve past decisions, architectural patterns, and "lessons learned."
+version: 1.0.0
 ---
 
 ## Phase: Harnessing (Isolation)

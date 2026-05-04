@@ -1,6 +1,7 @@
 ---
 name: minustoken
 description: Density management protocol. Switch tiers to control token usage and speed.
+version: 1.0.0
 ---
 
 ## Protocol: Minustoken

@@ -1,6 +1,7 @@
 ---
 name: orchestrator
 description: The Dynamic Agent Orchestrator. Selects the optimal topology (Parallel, Hierarchical, or Serial) and manages tool scoping for sub-agents.
+version: 1.0.0
 ---
 
 ## Phase: Topology Selection

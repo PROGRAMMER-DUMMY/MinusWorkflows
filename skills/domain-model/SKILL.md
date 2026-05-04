@@ -1,6 +1,7 @@
 ---
 name: domain-model
 description: Syncs the plan with the project's domain language and CONTEXT.md.
+version: 1.0.0
 ---
 
 ## Phase: Domain Alignment

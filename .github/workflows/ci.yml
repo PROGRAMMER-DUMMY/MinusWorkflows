@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Fast: pure JS unit tests — no Docker, no Rust, ~30s
+  unit-tests:
+    name: Unit Tests (JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run test-pipeline
+
+  # Fast: Rust type-check only — no full compile, ~2min
+  rust-check:
+    name: Rust Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ocr_memory_rust
+      - run: cargo check --manifest-path ocr_memory_rust/Cargo.toml
+
+  # Full integration: Postgres + Redis + compiled binary + harness, ~8–12min
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ocrmemory
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: ocrmemory
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgresql://ocrmemory:testpass@localhost:5432/ocrmemory
+      REDIS_URL: redis://localhost:6379
+      MODE: standard
+      API_KEY: ci-test-api-key
+      ADMIN_KEY: ci-test-admin-key
+      OCR_MEMORY_URL: http://localhost:3000
+      RUST_LOG: warn
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ocr_memory_rust
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build OCR-Memory service
+        run: cargo build --release --manifest-path ocr_memory_rust/Cargo.toml
+
+      - name: Start OCR-Memory service
+        run: ./ocr_memory_rust/target/release/ocr_memory_rust &
+
+      - name: Wait for service health
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/health && echo "Service ready" && break
+            echo "Waiting... ($i/20)"
+            sleep 3
+          done
+          curl -sf http://localhost:3000/health || (echo "Service failed to start" && exit 1)
+
+      - run: npm install
+
+      - name: Run integration harness
+        run: npm run harness

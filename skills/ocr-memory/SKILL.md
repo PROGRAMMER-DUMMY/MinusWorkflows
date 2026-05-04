@@ -1,6 +1,7 @@
 ---
 name: ocr-memory
 description: Instructions for using the OCR-Memory service to store trajectories and retrieve context from the memory bank.
+version: 1.0.0
 ---
 
 ## Phase: Memory Management

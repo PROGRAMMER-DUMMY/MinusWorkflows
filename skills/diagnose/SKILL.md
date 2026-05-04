@@ -1,6 +1,7 @@
 ---
 name: diagnose
 description: Disciplined debugging loop for hard bugs and performance regressions. Reproduce -> Hypothesise -> Fix.
+version: 1.0.0
 ---
 
 ## Phase: Diagnosis

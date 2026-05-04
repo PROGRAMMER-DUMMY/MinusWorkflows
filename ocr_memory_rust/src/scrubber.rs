@@ -1,11 +1,20 @@
-use candle_core::{Device, Tensor};
-use candle_transformers::models::distilbert::{Config, DistilBertModel};
-use hf_hub::{api::sync::Api, Repo, RepoType};
-use tokenizers::Tokenizer;
 use regex::Regex;
+
+// ── NER-specific imports (only compiled with --features ner) ─────────────────
+#[cfg(feature = "ner")]
+use candle_core::{Device, Tensor};
+#[cfg(feature = "ner")]
+use candle_transformers::models::distilbert::{Config, DistilBertModel};
+#[cfg(feature = "ner")]
+use hf_hub::{api::sync::Api, Repo, RepoType};
+#[cfg(feature = "ner")]
+use tokenizers::Tokenizer;
+#[cfg(feature = "ner")]
 use std::collections::HashMap;
+#[cfg(feature = "ner")]
 use serde::Deserialize;
 
+#[cfg(feature = "ner")]
 #[derive(Deserialize, Debug)]
 struct NerConfig {
     #[serde(flatten)]
@@ -14,40 +23,34 @@ struct NerConfig {
     id2label: HashMap<String, String>,
 }
 
+// ── Scrubber struct ───────────────────────────────────────────────────────────
+// Without `ner` feature: zero-size struct, regex-only scrubbing.
+// With `ner` feature: holds the DistilBERT model for entity detection.
+
 pub struct SmartScrubber {
+    #[cfg(feature = "ner")]
     model: DistilBertModel,
+    #[cfg(feature = "ner")]
     tokenizer: Tokenizer,
+    #[cfg(feature = "ner")]
     device: Device,
+    #[cfg(feature = "ner")]
     label_map: HashMap<u32, String>,
+    #[cfg(feature = "ner")]
     classifier_weights: Tensor,
+    #[cfg(feature = "ner")]
     classifier_bias: Tensor,
 }
 
 impl SmartScrubber {
     pub fn scrub(&self, text: &str) -> String {
-        let mut redacted_text = text.to_string();
-
-        // 1. Regex Pass
-        redacted_text = self.regex_pass(&redacted_text);
-
-        // 2. Smart Pass (NER)
-        redacted_text = self.smart_pass(&redacted_text);
-
-        redacted_text
-    }
-
-    fn regex_pass(&self, text: &str) -> String {
-        let email_regex = Regex::new(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").unwrap();
-        let ip_regex = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap();
-        let secret_regex = Regex::new(r"sk-[a-zA-Z0-9]{32}").unwrap();
-
-        let mut result = text.to_string();
-        result = email_regex.replace_all(&result, "[REDACTED]").to_string();
-        result = ip_regex.replace_all(&result, "[REDACTED]").to_string();
-        result = secret_regex.replace_all(&result, "[REDACTED]").to_string();
+        let result = regex_pass(text);
+        #[cfg(feature = "ner")]
+        let result = self.smart_pass(&result);
         result
     }
 
+    #[cfg(feature = "ner")]
     fn smart_pass(&self, text: &str) -> String {
         if text.is_empty() {
             return text.to_string();
@@ -67,7 +70,6 @@ impl SmartScrubber {
             Err(_) => return text.to_string(),
         };
 
-        // DistilBert forward takes input_ids and attention_mask
         let attention_mask = match input_ids_tensor.ones_like() {
             Ok(t) => t,
             Err(_) => return text.to_string(),
@@ -78,7 +80,6 @@ impl SmartScrubber {
             Err(_) => return text.to_string(),
         };
 
-        // Apply classification head
         let logits = match output.matmul(&self.classifier_weights.t().unwrap()) {
             Ok(t) => match t.broadcast_add(&self.classifier_bias) {
                 Ok(t) => t,
@@ -103,8 +104,8 @@ impl SmartScrubber {
 
         for (idx, &label_id) in predictions.iter().enumerate() {
             if let Some(label) = self.label_map.get(&label_id) {
-                let label_upper = label.to_uppercase();
-                if label_upper.contains("PER") || label_upper.contains("LOC") || label_upper.contains("ORG") {
+                let upper = label.to_uppercase();
+                if upper.contains("PER") || upper.contains("LOC") || upper.contains("ORG") {
                     if idx < offsets.len() {
                         let (start, end) = offsets[idx];
                         for i in start..end {
@@ -117,77 +118,87 @@ impl SmartScrubber {
             }
         }
 
-        let mut final_result = String::new();
-        let mut redactions: Vec<(usize, usize)> = Vec::new();
-        
-        let mut start = None;
-        for (i, &redact) in redaction_mask.iter().enumerate() {
-            if redact && start.is_none() {
-                start = Some(i);
-            } else if !redact && start.is_some() {
-                redactions.push((start.unwrap(), i));
-                start = None;
-            }
-        }
-        if let Some(s) = start {
-            redactions.push((s, redaction_mask.len()));
-        }
-
-        if redactions.is_empty() {
-            return text.to_string();
-        }
-
-        let mut merged = Vec::new();
-        let (mut curr_s, mut curr_e) = redactions[0];
-        for &(s, e) in &redactions[1..] {
-            if s <= curr_e {
-                curr_e = e;
-            } else {
-                merged.push((curr_s, curr_e));
-                curr_s = s;
-                curr_e = e;
-            }
-        }
-        merged.push((curr_s, curr_e));
-
-        let mut last_pos = 0;
-        for (s, e) in merged {
-            if s > last_pos {
-                final_result.push_str(&text[last_pos..s]);
-            }
-            final_result.push_str("[REDACTED]");
-            last_pos = e;
-        }
-        if last_pos < text.len() {
-            final_result.push_str(&text[last_pos..]);
-        }
-
-        final_result
+        build_redacted(text, &redaction_mask)
     }
 }
 
+fn regex_pass(text: &str) -> String {
+    let email  = Regex::new(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").unwrap();
+    let ip     = Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap();
+    let secret = Regex::new(r"sk-[a-zA-Z0-9]{32,}").unwrap();
+    let mut r  = text.to_string();
+    r = email.replace_all(&r, "[REDACTED]").to_string();
+    r = ip.replace_all(&r, "[REDACTED]").to_string();
+    r = secret.replace_all(&r, "[REDACTED]").to_string();
+    r
+}
+
+#[cfg(feature = "ner")]
+fn build_redacted(text: &str, mask: &[bool]) -> String {
+    let mut ranges: Vec<(usize, usize)> = Vec::new();
+    let mut start = None;
+    for (i, &redact) in mask.iter().enumerate() {
+        if redact && start.is_none() { start = Some(i); }
+        else if !redact && start.is_some() { ranges.push((start.unwrap(), i)); start = None; }
+    }
+    if let Some(s) = start { ranges.push((s, mask.len())); }
+
+    let mut merged: Vec<(usize, usize)> = Vec::new();
+    if let Some(&(mut cs, mut ce)) = ranges.first() {
+        for &(s, e) in &ranges[1..] {
+            if s <= ce { ce = e; } else { merged.push((cs, ce)); cs = s; ce = e; }
+        }
+        merged.push((cs, ce));
+    }
+
+    let mut result = String::new();
+    let mut last = 0;
+    for (s, e) in merged {
+        if s > last { result.push_str(&text[last..s]); }
+        result.push_str("[REDACTED]");
+        last = e;
+    }
+    if last < text.len() { result.push_str(&text[last..]); }
+    result
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 pub fn init_scrubber() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
+    #[cfg(feature = "ner")]
+    return init_ner();
+
+    #[cfg(not(feature = "ner"))]
+    Ok(SmartScrubber {})
+}
+
+#[cfg(feature = "ner")]
+fn init_ner() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
     let device = Device::Cpu;
     let api = Api::new()?;
-    let repo = api.repo(Repo::new("elastic/distilbert-base-cased-finetuned-conll03-english".to_string(), RepoType::Model));
+    let repo = api.repo(Repo::new(
+        "elastic/distilbert-base-cased-finetuned-conll03-english".to_string(),
+        RepoType::Model,
+    ));
 
-    let config_file = repo.get("config.json")?;
+    let config_file    = repo.get("config.json")?;
     let tokenizer_file = repo.get("tokenizer.json")?;
-    let weights_file = repo.get("model.safetensors")?;
+    let weights_file   = repo.get("model.safetensors")?;
 
-    let config_content = std::fs::read_to_string(config_file)?;
-    let ner_config: NerConfig = serde_json::from_str(&config_content)?;
+    let ner_config: NerConfig = serde_json::from_str(&std::fs::read_to_string(config_file)?)?;
     let tokenizer = Tokenizer::from_file(tokenizer_file).map_err(|e| e.to_string())?;
 
     let vb = unsafe {
-        candle_nn::var_builder::VarBuilder::from_safetensors(vec![weights_file], candle_core::DType::F32, &device)?
+        candle_nn::var_builder::VarBuilder::from_safetensors(
+            vec![weights_file],
+            candle_core::DType::F32,
+            &device,
+        )?
     };
 
-    let model = DistilBertModel::load(vb.pp("distilbert"), &ner_config.base)?;
-    
-    // Load classifier head
+    let model              = DistilBertModel::load(vb.pp("distilbert"), &ner_config.base)?;
     let classifier_weights = vb.get((ner_config.num_labels, ner_config.base.dim), "classifier.weight")?;
-    let classifier_bias = vb.get(ner_config.num_labels, "classifier.bias")?;
+    let classifier_bias    = vb.get(ner_config.num_labels, "classifier.bias")?;
 
     let mut label_map = HashMap::new();
     for (id_str, label) in ner_config.id2label {
@@ -196,13 +207,5 @@ pub fn init_scrubber() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
         }
     }
 
-    Ok(SmartScrubber {
-        model,
-        tokenizer,
-        device,
-        label_map,
-        classifier_weights,
-        classifier_bias,
-    })
+    Ok(SmartScrubber { model, tokenizer, device, label_map, classifier_weights, classifier_bias })
 }
-

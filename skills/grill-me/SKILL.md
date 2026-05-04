@@ -1,6 +1,7 @@
 ---
 name: grill-me
 description: Interview the user relentlessly about every aspect of a plan or design until reaching shared understanding. 
+version: 1.0.0
 ---
 
 ## Phase: Grilling

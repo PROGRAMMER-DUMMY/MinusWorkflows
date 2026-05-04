@@ -1,6 +1,7 @@
 ---
 name: auditor
 description: Automated quality gate that validates the current state against the original requirements. Use at every phase transition.
+version: 1.0.0
 ---
 
 ## Phase: Audit

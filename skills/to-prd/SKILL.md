@@ -1,6 +1,7 @@
 ---
 name: to-prd
 description: Transforms the grilled design decisions into a formal Product Requirements Document (PRD).
+version: 1.0.0
 ---
 
 ## Phase: Spec Generation

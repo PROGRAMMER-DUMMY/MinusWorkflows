@@ -1,6 +1,7 @@
 ---
 name: control-pane
 description: Dynamic model selection and escalation engine. Maps task metadata to model tiers and manages intelligence escalation.
+version: 1.0.0
 ---
 
 ## Intelligence Routing Logic

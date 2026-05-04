@@ -1,6 +1,7 @@
 ---
 name: discovery
 description: Scans the codebase for architectural patterns, technical debt, and deepening opportunities to inform design recommendations.
+version: 1.0.0
 ---
 
 ## Phase: Proactive Discovery

@@ -1,6 +1,7 @@
 ---
 name: planner
 description: Bridges the PRD to implementation by generating a dependency-aware roadmap. Use after the Architect phase.
+version: 1.0.0
 ---
 
 ## Phase: Planning

@@ -1,6 +1,7 @@
 ---
 name: builder
 description: PRD to Code. Combines planner, to-issues, tdd, and auditor.
+version: 1.0.0
 ---
 
 1. **Phase 1: Planning**: Activate `planner`. Build the roadmap.
