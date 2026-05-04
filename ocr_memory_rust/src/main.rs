@@ -25,6 +25,7 @@ use std::time::Instant;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, instrument, warn};
 use uuid::Uuid;
+use sqlx::Row;
 
 use crate::renderer::TrajectoryRenderer;
 use crate::retriever::{Backend, VisionClient};
@@ -464,20 +465,22 @@ async fn optical_retrieve(
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let t = Instant::now();
 
-    let memory = sqlx::query!(
+    let memory = sqlx::query(
         "SELECT vm.episode_id, vm.image_path \
          FROM visual_memories vm \
          JOIN episodes e ON vm.episode_id = e.id \
          WHERE e.project_id = $1 \
          ORDER BY vm.created_at DESC LIMIT 1",
-        project_id
     )
+    .bind(project_id)
     .fetch_optional(pool).await?;
 
     let Some(mem) = memory else { return Ok(vec![]); };
 
-    let image_bytes = std::fs::read(&mem.image_path)
-        .map_err(|e| format!("image read {}: {}", mem.image_path, e))?;
+    let episode_id: Uuid = mem.try_get("episode_id")?;
+    let image_path: String = mem.try_get("image_path")?;
+    let image_bytes = std::fs::read(&image_path)
+        .map_err(|e| format!("image read {}: {}", image_path, e))?;
 
     let (indices, input_tokens, output_tokens) =
         VisionClient::new().retrieve_indices_with_usage(&image_bytes, query, backend).await?;
@@ -490,14 +493,15 @@ async fn optical_retrieve(
 
     if indices.is_empty() { return Ok(vec![]); }
 
-    let logs = sqlx::query!(
+    let logs = sqlx::query(
         "SELECT content FROM text_logs WHERE episode_id = $1 ORDER BY seq_index ASC",
-        mem.episode_id
     )
+    .bind(episode_id)
     .fetch_all(pool).await?;
 
     Ok(indices.iter()
-        .filter_map(|&i| logs.get((i as usize).saturating_sub(1)).map(|r| r.content.clone()))
+        .filter_map(|&i| logs.get((i as usize).saturating_sub(1)))
+        .filter_map(|r| r.try_get::<String, _>("content").ok())
         .collect())
 }
 
@@ -514,33 +518,37 @@ async fn sharpen_cold_memories(
     pool: &sqlx::PgPool,
     project_id: Uuid,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let cold = sqlx::query!(
+    let cold = sqlx::query(
         "SELECT vm.episode_id, vm.image_path \
          FROM visual_memories vm \
          JOIN episodes e ON vm.episode_id = e.id \
          WHERE e.project_id = $1 AND vm.resolution_width < 1024",
-        project_id
     )
+    .bind(project_id)
     .fetch_all(pool).await?;
 
     for mem in cold {
-        let logs = sqlx::query!(
+        let episode_id: Uuid = mem.try_get("episode_id")?;
+        let image_path: String = mem.try_get("image_path")?;
+        let logs = sqlx::query(
             "SELECT content FROM text_logs WHERE episode_id = $1 ORDER BY seq_index ASC",
-            mem.episode_id
         )
+        .bind(episode_id)
         .fetch_all(pool).await?;
 
-        let segments: Vec<String> = logs.into_iter().map(|l| l.content).collect();
+        let segments: Vec<String> = logs.into_iter()
+            .map(|l| l.try_get::<String, _>("content").unwrap_or_default())
+            .collect();
         let sharpened = TrajectoryRenderer::new().render_trajectory(segments, (1024, 1024));
 
-        if std::fs::write(&mem.image_path, &sharpened).is_ok() {
-            sqlx::query!(
+        if std::fs::write(&image_path, &sharpened).is_ok() {
+            sqlx::query(
                 "UPDATE visual_memories SET resolution_width=1024, resolution_height=1024 \
                  WHERE episode_id=$1",
-                mem.episode_id
             )
+            .bind(episode_id)
             .execute(pool).await?;
-            info!(episode_id = %mem.episode_id, "sharpened cold memory");
+            info!(episode_id = %episode_id, "sharpened cold memory");
         }
     }
     Ok(())
@@ -683,23 +691,27 @@ async fn retention_run(state: State<Arc<AppState>>) -> impl IntoResponse {
 
     if let Some(days) = ttl_days {
         let cutoff = chrono::Utc::now() - chrono::Duration::days(days);
-        let rows = sqlx::query!(
+        let rows = sqlx::query(
             "SELECT id FROM episodes WHERE created_at < $1 AND archived_at IS NULL",
-            cutoff
         )
+        .bind(cutoff)
         .fetch_all(&state.db).await.unwrap_or_default();
-        victim_ids.extend(rows.into_iter().map(|r| r.id));
+        victim_ids.extend(rows.into_iter().filter_map(|r| r.try_get::<Uuid, _>("id").ok()));
     }
 
     if let Some(max) = max_per_project {
-        let projects = sqlx::query!("SELECT DISTINCT project_id FROM episodes")
+        let projects = sqlx::query("SELECT DISTINCT project_id FROM episodes")
             .fetch_all(&state.db).await.unwrap_or_default();
         for p in projects {
+            let project_id: Uuid = match p.try_get("project_id") {
+                Ok(id) => id,
+                Err(_) => continue,
+            };
             let rows: Vec<Uuid> = sqlx::query_scalar(
                 "SELECT id FROM episodes WHERE project_id = $1 AND archived_at IS NULL \
                  ORDER BY created_at ASC OFFSET $2"
             )
-            .bind(p.project_id)
+            .bind(project_id)
             .bind(max)
             .fetch_all(&state.db).await.unwrap_or_default();
             victim_ids.extend(rows);
@@ -714,19 +726,24 @@ async fn retention_run(state: State<Arc<AppState>>) -> impl IntoResponse {
     let mut archived_pngs: u64 = 0;
 
     for id in &victim_ids {
-        let images = sqlx::query!(
+        let images = sqlx::query(
             "SELECT vm.image_path, e.project_id \
              FROM visual_memories vm JOIN episodes e ON vm.episode_id = e.id \
              WHERE vm.episode_id = $1",
-            id
         )
+        .bind(id)
         .fetch_all(&state.db).await.unwrap_or_default();
 
+        let image_paths: Vec<String> = images.iter()
+            .filter_map(|img| img.try_get::<String, _>("image_path").ok())
+            .collect();
         for img in &images {
-            let path = std::path::Path::new(&img.image_path);
+            let image_path: String = img.try_get("image_path").unwrap_or_default();
+            let project_id: Uuid = img.try_get("project_id").unwrap_or(Uuid::nil());
+            let path = std::path::Path::new(&image_path);
             if do_archive {
                 let dst = std::path::PathBuf::from(".vault/archive")
-                    .join(img.project_id.to_string());
+                    .join(project_id.to_string());
                 std::fs::create_dir_all(&dst).ok();
                 if let Some(fname) = path.file_name() {
                     if std::fs::copy(path, dst.join(fname)).is_ok() {
@@ -737,12 +754,13 @@ async fn retention_run(state: State<Arc<AppState>>) -> impl IntoResponse {
             freed_bytes += std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
         }
 
-        if sqlx::query!("DELETE FROM episodes WHERE id = $1", id)
+        if sqlx::query("DELETE FROM episodes WHERE id = $1")
+            .bind(id)
             .execute(&state.db).await.is_ok()
         {
             deleted += 1;
-            for img in &images {
-                std::fs::remove_file(&img.image_path).ok();
+            for p in &image_paths {
+                std::fs::remove_file(p).ok();
             }
         }
     }

@@ -8,7 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use std::{env, sync::Arc};
 use uuid::Uuid;
 
@@ -135,37 +135,35 @@ fn hash_key(raw: &str) -> String {
 async fn lookup_key(pool: &PgPool, raw_key: &str) -> Option<ResolvedKey> {
     let hash = hash_key(raw_key);
 
-    let row = sqlx::query!(
+    let row = sqlx::query(
         "SELECT id, project_id, label, expires_at FROM api_keys WHERE key_hash = $1",
-        hash
     )
+    .bind(hash)
     .fetch_optional(pool)
     .await
     .ok()??;
 
-    // Check expiry
-    if let Some(expires) = row.expires_at {
+    let expires_at: Option<chrono::DateTime<chrono::Utc>> = row.try_get("expires_at").unwrap_or(None);
+    if let Some(expires) = expires_at {
         if expires < chrono::Utc::now() {
             return None;
         }
     }
 
-    // Update last_used_at and write audit entry (best-effort, non-blocking)
+    let id: Uuid = row.try_get("id").ok()?;
+    let project_id: Option<Uuid> = row.try_get("project_id").unwrap_or(None);
+    let label: String = row.try_get("label").ok()?;
+
     let pool2 = pool.clone();
-    let id = row.id;
-    let project_id_for_audit = row.project_id;
     tokio::spawn(async move {
-        let _ = sqlx::query!("UPDATE api_keys SET last_used_at = now() WHERE id = $1", id)
+        let _ = sqlx::query("UPDATE api_keys SET last_used_at = now() WHERE id = $1")
+            .bind(id)
             .execute(&pool2)
             .await;
     });
-    audit(pool, Some(id), "use", project_id_for_audit, None, "ok", None);
+    audit(pool, Some(id), "use", project_id, None, "ok", None);
 
-    Some(ResolvedKey {
-        key_id:     row.id,
-        project_id: row.project_id,
-        label:      row.label,
-    })
+    Some(ResolvedKey { key_id: id, project_id, label })
 }
 
 // ── Management endpoints ──────────────────────────────────────────────────────
@@ -199,25 +197,26 @@ pub async fn create_key(
         chrono::Utc::now() + chrono::Duration::days(d)
     });
 
-    let row = sqlx::query!(
+    let row = sqlx::query(
         "INSERT INTO api_keys (key_hash, project_id, label, expires_at) \
          VALUES ($1, $2, $3, $4) RETURNING id",
-        hash,
-        req.project_id,
-        req.label,
-        expires_at,
     )
+    .bind(hash)
+    .bind(req.project_id)
+    .bind(req.label.clone())
+    .bind(expires_at)
     .fetch_one(&state.db)
     .await;
 
     match row {
         Ok(r) => {
-            audit(&state.db, Some(r.id), "create", req.project_id, None, "ok",
+            let id: Uuid = r.try_get("id").expect("RETURNING id");
+            audit(&state.db, Some(id), "create", req.project_id, None, "ok",
                 Some(json!({ "label": req.label })));
             (
                 StatusCode::CREATED,
                 Json(json!(CreateKeyResponse {
-                    id: r.id,
+                    id,
                     raw_key,
                     project_id: req.project_id,
                     label: req.label,
@@ -236,13 +235,17 @@ pub async fn revoke_key(
 ) -> impl IntoResponse {
     let state = state.0;
     let id = id.0;
-    let result = sqlx::query!("DELETE FROM api_keys WHERE id = $1 RETURNING id, project_id", id)
-        .fetch_optional(&state.db)
-        .await;
+    let result = sqlx::query(
+        "DELETE FROM api_keys WHERE id = $1 RETURNING id, project_id",
+    )
+    .bind(id)
+    .fetch_optional(&state.db)
+    .await;
 
     match result {
         Ok(Some(r)) => {
-            audit(&state.db, Some(id), "revoke", r.project_id, None, "ok", None);
+            let project_id: Option<Uuid> = r.try_get("project_id").unwrap_or(None);
+            audit(&state.db, Some(id), "revoke", project_id, None, "ok", None);
             StatusCode::NO_CONTENT.into_response()
         }
         Ok(None)    => (StatusCode::NOT_FOUND, "key not found").into_response(),
@@ -256,35 +259,38 @@ pub async fn rotate_key(
 ) -> impl IntoResponse {
     let state = state.0;
     let id = id.0;
-    let existing = sqlx::query!(
+    let existing = sqlx::query(
         "SELECT project_id, label FROM api_keys WHERE id = $1",
-        id
     )
+    .bind(id)
     .fetch_optional(&state.db)
     .await;
 
     match existing {
         Ok(Some(row)) => {
+            let project_id: Option<Uuid> = row.try_get("project_id").unwrap_or(None);
+            let label: String = row.try_get("label").unwrap_or_default();
             let raw_key = format!("mk_{}", Uuid::new_v4().to_string().replace('-', ""));
             let new_hash = hash_key(&raw_key);
 
-            let result = sqlx::query!(
+            let result = sqlx::query(
                 "UPDATE api_keys SET key_hash = $1, last_used_at = NULL WHERE id = $2",
-                new_hash, id
             )
+            .bind(new_hash)
+            .bind(id)
             .execute(&state.db)
             .await;
 
             match result {
                 Ok(_) => {
                     let rotated_at = chrono::Utc::now().to_rfc3339();
-                    audit(&state.db, Some(id), "rotate", row.project_id, None, "ok",
-                        Some(json!({ "label": row.label })));
+                    audit(&state.db, Some(id), "rotate", project_id, None, "ok",
+                        Some(json!({ "label": label })));
                     (StatusCode::OK, Json(json!({
                         "id": id,
                         "raw_key": raw_key,
-                        "project_id": row.project_id,
-                        "label": row.label,
+                        "project_id": project_id,
+                        "label": label,
                         "rotated_at": rotated_at,
                     }))).into_response()
                 }
@@ -308,9 +314,9 @@ struct KeyRecord {
 
 pub async fn list_keys(state: State<Arc<AppState>>) -> impl IntoResponse {
     let state = state.0;
-    let rows = sqlx::query!(
+    let rows = sqlx::query(
         "SELECT id, project_id, label, created_at, expires_at, last_used_at \
-         FROM api_keys ORDER BY created_at DESC"
+         FROM api_keys ORDER BY created_at DESC",
     )
     .fetch_all(&state.db)
     .await;
@@ -318,12 +324,15 @@ pub async fn list_keys(state: State<Arc<AppState>>) -> impl IntoResponse {
     match rows {
         Ok(rs) => {
             let keys: Vec<KeyRecord> = rs.into_iter().map(|r| KeyRecord {
-                id:           r.id,
-                project_id:   r.project_id,
-                label:        r.label,
-                created_at:   r.created_at.to_rfc3339(),
-                expires_at:   r.expires_at.map(|t| t.to_rfc3339()),
-                last_used_at: r.last_used_at.map(|t| t.to_rfc3339()),
+                id:           r.try_get("id").unwrap_or(Uuid::nil()),
+                project_id:   r.try_get("project_id").unwrap_or(None),
+                label:        r.try_get("label").unwrap_or_default(),
+                created_at:   r.try_get::<chrono::DateTime<chrono::Utc>, _>("created_at")
+                               .map(|t| t.to_rfc3339()).unwrap_or_default(),
+                expires_at:   r.try_get::<Option<chrono::DateTime<chrono::Utc>>, _>("expires_at")
+                               .unwrap_or(None).map(|t| t.to_rfc3339()),
+                last_used_at: r.try_get::<Option<chrono::DateTime<chrono::Utc>>, _>("last_used_at")
+                               .unwrap_or(None).map(|t| t.to_rfc3339()),
             }).collect();
             (StatusCode::OK, Json(json!(keys))).into_response()
         }
@@ -353,32 +362,33 @@ pub async fn list_audit(
         .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
         .map(|dt| dt.with_timezone(&chrono::Utc));
 
-    let rows = sqlx::query!(
+    let rows = sqlx::query(
         "SELECT id, key_id, action, project_id, req_id, status, meta, created_at \
          FROM audit_log \
          WHERE ($1::UUID IS NULL OR key_id = $1) \
            AND ($2::TEXT IS NULL OR action = $2) \
            AND ($3::TIMESTAMPTZ IS NULL OR created_at >= $3) \
          ORDER BY created_at DESC LIMIT $4",
-        params.key_id,
-        params.action.as_deref(),
-        since,
-        limit,
     )
+    .bind(params.key_id)
+    .bind(params.action.as_deref())
+    .bind(since)
+    .bind(limit)
     .fetch_all(&state.db)
     .await;
 
     match rows {
         Ok(rs) => {
             let out: Vec<serde_json::Value> = rs.into_iter().map(|r| json!({
-                "id":         r.id,
-                "key_id":     r.key_id,
-                "action":     r.action,
-                "project_id": r.project_id,
-                "req_id":     r.req_id,
-                "status":     r.status,
-                "meta":       r.meta,
-                "created_at": r.created_at.to_rfc3339(),
+                "id":         r.try_get::<Uuid, _>("id").ok(),
+                "key_id":     r.try_get::<Option<Uuid>, _>("key_id").unwrap_or(None),
+                "action":     r.try_get::<String, _>("action").unwrap_or_default(),
+                "project_id": r.try_get::<Option<Uuid>, _>("project_id").unwrap_or(None),
+                "req_id":     r.try_get::<Option<String>, _>("req_id").unwrap_or(None),
+                "status":     r.try_get::<String, _>("status").unwrap_or_default(),
+                "meta":       r.try_get::<Option<serde_json::Value>, _>("meta").unwrap_or(None),
+                "created_at": r.try_get::<chrono::DateTime<chrono::Utc>, _>("created_at")
+                               .map(|t| t.to_rfc3339()).ok(),
             })).collect();
             (StatusCode::OK, Json(json!(out))).into_response()
         }

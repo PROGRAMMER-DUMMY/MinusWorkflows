@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::env;
 use base64::{Engine as _, engine::general_purpose};
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -62,19 +62,19 @@ impl VisionClient {
         project_id: Uuid,
         query: &str,
     ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-        let logs = sqlx::query!(
+        let logs = sqlx::query(
             "SELECT content FROM text_logs \
              WHERE project_id = $1 \
              AND (content ILIKE $2 OR content % $3) \
              ORDER BY created_at DESC LIMIT 50",
-            project_id,
-            format!("%{}%", query),
-            query
         )
+        .bind(project_id)
+        .bind(format!("%{}%", query))
+        .bind(query)
         .fetch_all(pool)
         .await?;
 
-        Ok(logs.into_iter().map(|l| l.content).collect())
+        Ok(logs.into_iter().map(|l| l.try_get::<String, _>("content").unwrap_or_default()).collect())
     }
 
     async fn query_openai(
@@ -243,16 +243,15 @@ pub async fn vector_search(
 
     let mut results = Vec::new();
     for row in &episode_rows {
-        use sqlx::Row;
         let episode_id: Uuid = row.try_get("id").ok()?;
-        let logs = sqlx::query!(
+        let logs = sqlx::query(
             "SELECT content FROM text_logs WHERE episode_id = $1 ORDER BY seq_index ASC",
-            episode_id
         )
+        .bind(episode_id)
         .fetch_all(pool)
         .await
         .ok()?;
-        results.extend(logs.into_iter().map(|l| l.content));
+        results.extend(logs.into_iter().map(|l| l.try_get::<String, _>("content").unwrap_or_default()));
     }
 
     Some(results)
