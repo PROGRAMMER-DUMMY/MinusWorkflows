@@ -13,10 +13,11 @@ use crate::state::AppState;
 /// Checks X-Api-Key or Authorization: Bearer <key> on protected routes.
 /// If API_KEY is not set in the environment, auth is skipped (dev mode).
 pub async fn auth_middleware(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     request: axum::extract::Request,
     next: Next,
 ) -> Response {
+    let state = state.0;
     if let Some(expected) = &state.api_key {
         let headers = request.headers();
 
