@@ -188,9 +188,10 @@ struct CreateKeyResponse {
 
 pub async fn create_key(
     state: State<Arc<AppState>>,
-    Json(req): Json<CreateKeyRequest>,
+    req: Json<CreateKeyRequest>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let req = req.0;
     let raw_key = format!("mk_{}", Uuid::new_v4().to_string().replace('-', ""));
     let hash = hash_key(&raw_key);
 
@@ -231,9 +232,10 @@ pub async fn create_key(
 
 pub async fn revoke_key(
     state: State<Arc<AppState>>,
-    axum::extract::Path(id): axum::extract::Path<Uuid>,
+    id: axum::extract::Path<Uuid>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let id = id.0;
     let result = sqlx::query!("DELETE FROM api_keys WHERE id = $1 RETURNING id, project_id", id)
         .fetch_optional(&state.db)
         .await;
@@ -250,9 +252,10 @@ pub async fn revoke_key(
 
 pub async fn rotate_key(
     state: State<Arc<AppState>>,
-    axum::extract::Path(id): axum::extract::Path<Uuid>,
+    id: axum::extract::Path<Uuid>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let id = id.0;
     let existing = sqlx::query!(
         "SELECT project_id, label FROM api_keys WHERE id = $1",
         id
@@ -340,9 +343,10 @@ pub struct AuditQueryParams {
 
 pub async fn list_audit(
     state: State<Arc<AppState>>,
-    axum::extract::Query(params): axum::extract::Query<AuditQueryParams>,
+    params: axum::extract::Query<AuditQueryParams>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let params = params.0;
     let limit = params.limit.unwrap_or(100).min(1000);
     let since = params.since
         .as_deref()

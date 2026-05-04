@@ -162,9 +162,10 @@ async fn metrics_endpoint(state: State<Arc<AppState>>) -> impl IntoResponse {
 async fn store_memory(
     state: State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(payload): Json<StoreRequest>,
+    payload: Json<StoreRequest>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let payload = payload.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
 
@@ -290,9 +291,10 @@ async fn store_memory(
 async fn retrieve_memory(
     state: State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(payload): Json<RetrieveRequest>,
+    payload: Json<RetrieveRequest>,
 ) -> impl IntoResponse {
     let state = state.0;
+    let payload = payload.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
 
