@@ -26,7 +26,10 @@
       "Bash(Select-Object FullName)",
       "Bash(npm run *)",
       "Bash(npm_config_global=true node scripts/postinstall.js)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git tag *)"
     ]
   }
 }

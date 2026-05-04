@@ -28,6 +28,10 @@ All notable changes to MinusWorkflows are documented here.
 - **`docs/architecture.md`** and **`docs/api.md`** — new developer documentation.
 - **`model_cache` Docker volume** — persists pre-baked NER model across image rebuilds.
 
+### Fixed
+- CI pipeline failure in `npm version` sync step — now uses `--allow-same-version` to prevent crashes when versions already match.
+- Rust Docker build failure — updated base image to `rust:1.85-slim` to support dependencies requiring `edition2024` (e.g., `idna_adapter`).
+
 ### Changed
 - `skills/minus/SKILL.md` step -1: `uvx code-review-graph update` is now best-effort — logs a warning and continues if the command is unavailable, never blocks.
 - Anthropic vision model updated from hardcoded `claude-3-5-sonnet-20240620` to configurable `claude-sonnet-4-6`.
