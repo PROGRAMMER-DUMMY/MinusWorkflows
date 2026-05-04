@@ -55,10 +55,11 @@ pub struct ResolvedKey {
 /// Backward compat: if API_KEY env is set and no DB row matches,
 /// falls back to comparing the raw key string (global dev key).
 pub async fn auth_middleware(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     mut request: axum::extract::Request,
     next: Next,
 ) -> Response {
+    let state = state.0;
     let headers = request.headers();
     let provided = headers
         .get("x-api-key")
@@ -186,9 +187,10 @@ struct CreateKeyResponse {
 }
 
 pub async fn create_key(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     Json(req): Json<CreateKeyRequest>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let raw_key = format!("mk_{}", Uuid::new_v4().to_string().replace('-', ""));
     let hash = hash_key(&raw_key);
 
@@ -228,9 +230,10 @@ pub async fn create_key(
 }
 
 pub async fn revoke_key(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     axum::extract::Path(id): axum::extract::Path<Uuid>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let result = sqlx::query!("DELETE FROM api_keys WHERE id = $1 RETURNING id, project_id", id)
         .fetch_optional(&state.db)
         .await;
@@ -246,9 +249,10 @@ pub async fn revoke_key(
 }
 
 pub async fn rotate_key(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     axum::extract::Path(id): axum::extract::Path<Uuid>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let existing = sqlx::query!(
         "SELECT project_id, label FROM api_keys WHERE id = $1",
         id
@@ -299,7 +303,8 @@ struct KeyRecord {
     last_used_at: Option<String>,
 }
 
-pub async fn list_keys(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn list_keys(state: State<Arc<AppState>>) -> impl IntoResponse {
+    let state = state.0;
     let rows = sqlx::query!(
         "SELECT id, project_id, label, created_at, expires_at, last_used_at \
          FROM api_keys ORDER BY created_at DESC"
@@ -334,9 +339,10 @@ pub struct AuditQueryParams {
 }
 
 pub async fn list_audit(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     axum::extract::Query(params): axum::extract::Query<AuditQueryParams>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let limit = params.limit.unwrap_or(100).min(1000);
     let since = params.since
         .as_deref()

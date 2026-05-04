@@ -96,8 +96,8 @@ async fn main() {
     let admin = Router::new()
         .route("/keys", post(api_keys::create_key))
         .route("/keys", get(api_keys::list_keys))
-        .route("/keys/{id}", delete(api_keys::revoke_key))
-        .route("/keys/{id}/rotate", post(api_keys::rotate_key))
+        .route("/keys/:id", delete(api_keys::revoke_key))
+        .route("/keys/:id/rotate", post(api_keys::rotate_key))
         .route("/admin/audit", get(api_keys::list_audit))
         .route("/admin/retention/run", post(retention_run))
         .route_layer(middleware::from_fn(api_keys::admin_auth_middleware));
@@ -116,7 +116,8 @@ async fn main() {
 
 // ── Observability ─────────────────────────────────────────────────────────────
 
-async fn health_check(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+async fn health_check(state: State<Arc<AppState>>) -> impl IntoResponse {
+    let state = state.0;
     let db_ok = sqlx::query("SELECT 1").execute(&state.db).await.is_ok();
 
     let cache_status = match &state.cache {
@@ -146,7 +147,8 @@ async fn health_check(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     (status, Json(body))
 }
 
-async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+async fn metrics_endpoint(state: State<Arc<AppState>>) -> impl IntoResponse {
+    let state = state.0;
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "text/plain; version=0.0.4")],
@@ -158,10 +160,11 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> impl IntoRespon
 
 #[instrument(skip_all, fields(episode_id = %payload.episode_id, project_id = %payload.project_id, n = payload.events.len(), req_id = tracing::field::Empty))]
 async fn store_memory(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     headers: HeaderMap,
     Json(payload): Json<StoreRequest>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
 
@@ -285,10 +288,11 @@ async fn store_memory(
 
 #[instrument(skip_all, fields(project_id = %payload.project_id, query = %payload.query, req_id = tracing::field::Empty))]
 async fn retrieve_memory(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     headers: HeaderMap,
     Json(payload): Json<RetrieveRequest>,
 ) -> impl IntoResponse {
+    let state = state.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
 
@@ -579,10 +583,11 @@ fn query_hash(query: &str) -> u64 {
 // ── Rate limiting middleware ──────────────────────────────────────────────────
 
 async fn rate_limit_middleware(
-    State(state): State<Arc<AppState>>,
+    state: State<Arc<AppState>>,
     request: axum::extract::Request,
     next: middleware::Next,
 ) -> impl IntoResponse {
+    let state = state.0;
     let rpm_limit: u32 = std::env::var("RATE_LIMIT_RPM")
         .ok().and_then(|v| v.parse().ok()).unwrap_or(60);
 
@@ -655,7 +660,8 @@ async fn req_id_middleware(
 
 // ── Retention policy ──────────────────────────────────────────────────────────
 
-async fn retention_run(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+async fn retention_run(state: State<Arc<AppState>>) -> impl IntoResponse {
+    let state = state.0;
     let ttl_days: Option<i64> = std::env::var("RETENTION_TTL_DAYS")
         .ok().and_then(|v| v.parse().ok()).filter(|&d: &i64| d > 0);
     let max_per_project: Option<i64> = std::env::var("RETENTION_MAX_EPISODES")
