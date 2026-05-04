@@ -124,8 +124,8 @@ impl TrajectoryRenderer {
         let scaled_font = font.as_scaled(scale);
         let mut x_pos = x;
         for c in text.chars() {
-            let glyph = scaled_font.scaled_glyph(c);
-            let glyph = glyph.positioned(ab_glyph::point(x_pos, y + scaled_font.ascent()));
+            let mut glyph = scaled_font.scaled_glyph(c);
+            glyph.position = ab_glyph::point(x_pos, y + scaled_font.ascent());
             if let Some(outline) = font.outline_glyph(glyph) {
                 let bounds = outline.px_bounds();
                 outline.draw(|gx, gy, gv| {
