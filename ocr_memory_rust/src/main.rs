@@ -158,7 +158,7 @@ async fn metrics_endpoint(state: State<Arc<AppState>>) -> impl IntoResponse {
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 
-#[instrument(skip_all, fields(episode_id = %payload.episode_id, project_id = %payload.project_id, n = payload.events.len(), req_id = tracing::field::Empty))]
+#[instrument(skip_all, fields(episode_id = %payload.0.episode_id, project_id = %payload.0.project_id, n = payload.0.events.len(), req_id = tracing::field::Empty))]
 async fn store_memory(
     state: State<Arc<AppState>>,
     headers: HeaderMap,
@@ -287,7 +287,7 @@ async fn store_memory(
 
 // ── Retrieve ──────────────────────────────────────────────────────────────────
 
-#[instrument(skip_all, fields(project_id = %payload.project_id, query = %payload.query, req_id = tracing::field::Empty))]
+#[instrument(skip_all, fields(project_id = %payload.0.project_id, query = %payload.0.query, req_id = tracing::field::Empty))]
 async fn retrieve_memory(
     state: State<Arc<AppState>>,
     headers: HeaderMap,
