@@ -94,8 +94,7 @@ async fn main() {
 
     // Admin routes — require ADMIN_KEY env var
     let admin = Router::new()
-        .route("/keys", post(api_keys::create_key))
-        .route("/keys", get(api_keys::list_keys))
+        .route("/keys", post(api_keys::create_key).get(api_keys::list_keys))
         .route("/keys/:id", delete(api_keys::revoke_key))
         .route("/keys/:id/rotate", post(api_keys::rotate_key))
         .route("/admin/audit", get(api_keys::list_audit))
@@ -588,7 +587,7 @@ async fn rate_limit_middleware(
     state: State<Arc<AppState>>,
     request: axum::extract::Request,
     next: middleware::Next,
-) -> impl IntoResponse {
+) -> axum::response::Response {
     let state = state.0;
     let rpm_limit: u32 = std::env::var("RATE_LIMIT_RPM")
         .ok().and_then(|v| v.parse().ok()).unwrap_or(60);
@@ -645,7 +644,7 @@ async fn rate_limit_middleware(
 async fn req_id_middleware(
     request: axum::extract::Request,
     next: middleware::Next,
-) -> impl IntoResponse {
+) -> axum::response::Response {
     let req_id = request
         .headers()
         .get("x-request-id")
