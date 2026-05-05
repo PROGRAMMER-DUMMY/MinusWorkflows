@@ -88,7 +88,10 @@ async function choose(question, choices) {
     choices.forEach((c, i) => console.log(`  ${i + 1}. ${c}`));
     const raw = await ask('Choice', '1');
     const n = parseInt(raw, 10) - 1;
-    return choices[Math.max(0, Math.min(choices.length - 1, isNaN(n) ? 0 : n))];
+    if (!isNaN(n) && n >= 0 && n < choices.length) return choices[n];
+    const lower = raw.toLowerCase();
+    const match = choices.find(c => c.toLowerCase().startsWith(lower));
+    return match ?? choices[0];
 }
 
 // ── CLI detection ─────────────────────────────────────────────────────────────
