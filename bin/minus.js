@@ -222,7 +222,7 @@ async function cmdStart() {
 
     process.stdout.write(`Waiting for ${baseUrl}/health`);
     let ready = false;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
         await new Promise(r => setTimeout(r, 2000));
         process.stdout.write('.');
         try {
@@ -236,7 +236,10 @@ async function cmdStart() {
         console.log(ok(`Service healthy at ${baseUrl}`));
         await cmdStatus();
     } else {
-        console.error(fail(`Not healthy after 60s. Check: docker-compose logs ocr_engine`));
+        console.error(fail(`Not healthy after 120s — ocr_engine logs:`));
+        try {
+            execSync(`docker compose ${envFlag}logs --tail=20 ocr_engine`, { cwd: ROOT, stdio: 'inherit' });
+        } catch {}
         process.exitCode = 1;
     }
 }
