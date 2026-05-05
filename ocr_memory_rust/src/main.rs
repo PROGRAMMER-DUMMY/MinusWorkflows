@@ -287,7 +287,7 @@ async fn store_memory(
 
 // ── Retrieve ──────────────────────────────────────────────────────────────────
 
-#[instrument(skip_all, fields(project_id = %payload.0.project_id, query = %payload.0.query, req_id = tracing::field::Empty))]
+#[instrument(skip_all, fields(project_id = %payload.0.project_id, req_id = tracing::field::Empty))]
 async fn retrieve_memory(
     state: State<Arc<AppState>>,
     headers: HeaderMap,
