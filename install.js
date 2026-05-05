@@ -203,7 +203,7 @@ function scaffoldProject(targetDir) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-console.log('Installing minusWorkflows...\n');
+console.log('Installing @minustoken/minus-workflows...\n');
 
 const providers = detectProviders();
 console.log(`Detected providers: ${providers.map(p => p.name).join(', ')}\n`);

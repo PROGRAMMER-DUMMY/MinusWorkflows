@@ -7,9 +7,10 @@ const fs   = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const PKG     = require('../package.json');
-const ROOT    = path.join(__dirname, '..');
-const VERSION = PKG.version;
+const PKG         = require('../package.json');
+const ROOT        = path.join(__dirname, '..');  // package install dir
+const PROJECT_DIR = process.cwd();               // user's project dir
+const VERSION     = PKG.version;
 
 // ── ANSI colors (no dependencies) ─────────────────────────────────────────────
 const C = {
@@ -27,7 +28,7 @@ const info = msg => `  ${C.dim}·${C.reset}  ${msg}`;
 
 // ── Env loader ────────────────────────────────────────────────────────────────
 function loadEnv() {
-    const envPath = path.join(ROOT, '.env');
+    const envPath = path.join(PROJECT_DIR, '.env');
     if (!fs.existsSync(envPath)) return {};
     const out = {};
     for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
@@ -108,7 +109,7 @@ function detectCLIs() {
 async function cmdInit() {
     console.log(`\n${C.bold}minus init${C.reset} — one-time setup\n`);
 
-    const envPath = path.join(ROOT, '.env');
+    const envPath = path.join(PROJECT_DIR, '.env');
     if (fs.existsSync(envPath)) {
         const ow = await ask('.env already exists. Overwrite? (y/N)', 'N');
         if (ow.toLowerCase() !== 'y') {
@@ -150,7 +151,7 @@ async function cmdInit() {
     const newAdminKey = randomBytes(32).toString('hex');
 
     // Build .env from template
-    const examplePath = path.join(ROOT, '.env.example');
+    const examplePath = path.join(ROOT, '.env.example');  // template lives in package
     let content = fs.existsSync(examplePath) ? fs.readFileSync(examplePath, 'utf8') : '';
     const setVar = (src, k, v) => {
         const re = new RegExp(`^#?\\s*${k}=.*`, 'm');
@@ -196,10 +197,12 @@ async function cmdStart() {
         console.error(fail(`docker-compose.yml not found`));
         process.exitCode = 1; return;
     }
+    const envFile = path.join(PROJECT_DIR, '.env');
+    const envFlag = fs.existsSync(envFile) ? `--env-file "${envFile}" ` : '';
     try {
-        execSync('docker-compose up -d', { cwd: ROOT, stdio: 'inherit' });
+        execSync(`docker compose ${envFlag}up -d`, { cwd: ROOT, stdio: 'inherit' });
     } catch {
-        console.error(fail(`docker-compose up failed — is Docker running?`));
+        console.error(fail(`docker compose up failed — is Docker running?`));
         process.exitCode = 1; return;
     }
 
@@ -229,7 +232,7 @@ async function cmdStart() {
 
 function cmdStop() {
     try {
-        execSync('docker-compose down', { cwd: ROOT, stdio: 'inherit' });
+        execSync('docker compose down', { cwd: ROOT, stdio: 'inherit' });
         console.log(ok('Stopped'));
     } catch { process.exitCode = 1; }
 }
@@ -392,7 +395,7 @@ async function cmdKeys(args) {
 
 function cmdBenchmark() {
     try {
-        execSync(`node "${path.join(ROOT, 'scripts/test_harness.js')}"`,
+        execSync(`node "${path.join(ROOT, 'scripts/benchmark.js')}"`,
             { stdio: 'inherit', env: { ...process.env, ...loadEnv() } });
     } catch { process.exitCode = 1; }
 }
@@ -419,7 +422,7 @@ function cmdSkills() {
 }
 
 function listSessions() {
-    const sessionsDir = path.join(ROOT, '.memory', 'sessions');
+    const sessionsDir = path.join(PROJECT_DIR, '.memory', 'sessions');
     if (!require('fs').existsSync(sessionsDir)) return [];
     return require('fs').readdirSync(sessionsDir, { withFileTypes: true })
         .filter(e => e.isDirectory())
@@ -550,8 +553,8 @@ async function cmdTrace(args) {
 }
 
 function doTrace(sessionId, verbose = false) {
-    const traceFile  = path.join(ROOT, '.memory', 'sessions', sessionId, 'trace.jsonl');
-    const statePath  = path.join(ROOT, '.memory', 'sessions', sessionId, 'state.json');
+    const traceFile  = path.join(PROJECT_DIR, '.memory', 'sessions', sessionId, 'trace.jsonl');
+    const statePath  = path.join(PROJECT_DIR, '.memory', 'sessions', sessionId, 'state.json');
     if (!require('fs').existsSync(traceFile)) {
         console.error(`No trace found. Check 'minus sessions' for valid session IDs.`);
         process.exitCode = 1; return;
@@ -569,7 +572,7 @@ function doTrace(sessionId, verbose = false) {
 
 function readSessionCost(sessionId) {
     try {
-        const bf = path.join(ROOT, '.memory', 'sessions', sessionId, 'budget_session.json');
+        const bf = path.join(PROJECT_DIR, '.memory', 'sessions', sessionId, 'budget_session.json');
         if (fs.existsSync(bf)) return JSON.parse(fs.readFileSync(bf, 'utf8')).spent || 0;
     } catch {}
     return 0;
@@ -613,7 +616,7 @@ async function cmdBudget(args) {
     const ora = require('ora');
     const spinner = ora('Reading cost data...').start();
 
-    const traceFile  = path.join(ROOT, '.memory', 'sessions', selected.sessionId, 'trace.jsonl');
+    const traceFile  = path.join(PROJECT_DIR, '.memory', 'sessions', selected.sessionId, 'trace.jsonl');
     const costEvents = getSessionCostFromTrace(traceFile);
     spinner.stop();
 
