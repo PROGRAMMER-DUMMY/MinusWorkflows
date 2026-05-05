@@ -1,5 +1,4 @@
 mod api_keys;
-mod auth;
 mod db;
 mod embedder;
 mod state;
@@ -50,7 +49,6 @@ struct StoreRequest {
 struct RetrieveRequest {
     query: String,
     project_id: Uuid,
-    scope: Option<String>,
 }
 
 #[derive(Serialize)]

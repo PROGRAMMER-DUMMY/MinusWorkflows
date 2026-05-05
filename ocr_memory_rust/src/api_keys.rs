@@ -40,8 +40,10 @@ pub fn audit(pool: &PgPool, key_id: Option<Uuid>, action: &'static str, project_
 
 #[derive(Clone, Debug)]
 pub struct ResolvedKey {
+    #[allow(dead_code)]
     pub key_id:     Uuid,
     pub project_id: Option<Uuid>,  // None = global (admin) key
+    #[allow(dead_code)]
     pub label:      String,
 }
 

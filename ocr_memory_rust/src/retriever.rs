@@ -44,17 +44,6 @@ impl VisionClient {
         }
     }
 
-    /// Kept for backward compatibility — callers that don't need token counts.
-    pub async fn retrieve_indices(
-        &self,
-        image_bytes: &[u8],
-        query: &str,
-        backend: Backend,
-    ) -> Result<Vec<u32>, Box<dyn std::error::Error + Send + Sync>> {
-        let (indices, _, _) = self.retrieve_indices_with_usage(image_bytes, query, backend).await?;
-        Ok(indices)
-    }
-
     /// Trigram / ILIKE text fallback — used when no embedding backend is configured.
     pub async fn retrieve_project_context(
         &self,
