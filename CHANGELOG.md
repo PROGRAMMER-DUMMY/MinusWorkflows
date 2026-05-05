@@ -2,6 +2,17 @@
 
 All notable changes to MinusWorkflows are documented here.
 
+## [2.1.3] — 2026-05-05
+
+### Fixed
+- **Port conflict error message** — `minus start` now distinguishes between "Docker not running" and "port already in use". If Docker daemon is running but a port is taken (e.g. local PostgreSQL on 5432), it prints the specific fix instead of the generic "is Docker running?" message.
+- **Configurable port bindings** — `docker-compose.yml` now respects `POSTGRES_PORT`, `REDIS_PORT`, and `OCR_MEMORY_PORT` env vars (all default to their standard values). Set `POSTGRES_PORT=5433` in `.env` to avoid conflicts with a local PostgreSQL instance.
+
+### Changed
+- Pipeline skills (`/minus`, `/architect`, etc.) are unaffected when the memory service is unavailable — `minus start` failure now mentions this explicitly.
+
+---
+
 ## [2.0.5] — 2026-05-05
 
 ### Fixed

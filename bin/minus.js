@@ -202,7 +202,18 @@ async function cmdStart() {
     try {
         execSync(`docker compose ${envFlag}up -d`, { cwd: ROOT, stdio: 'inherit' });
     } catch {
-        console.error(fail(`docker compose up failed — is Docker running?`));
+        let dockerRunning = false;
+        try { execSync('docker info', { stdio: 'pipe' }); dockerRunning = true; } catch {}
+        if (dockerRunning) {
+            console.error(fail(`docker compose up failed — likely a port conflict`));
+            console.error(info(`If port 5432 is in use (e.g. local PostgreSQL): set POSTGRES_PORT=5433 in .env`));
+            console.error(info(`If port 6379 is in use (e.g. local Redis): set REDIS_PORT=6380 in .env`));
+            console.error(info(`Then update OCR_MEMORY_URL if you changed OCR_MEMORY_PORT`));
+            console.error(info(`Details: docker compose logs db`));
+        } else {
+            console.error(fail(`Docker is not running — start Docker Desktop and retry`));
+            console.error(info(`The pipeline skills (/minus, /architect, etc.) still work without the memory service`));
+        }
         process.exitCode = 1; return;
     }
 
