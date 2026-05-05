@@ -12,12 +12,12 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - run: npm run test-pipeline
 
   # ── Docker: build multi-platform image and push to GHCR ──────────────────────
@@ -30,7 +30,7 @@ jobs:
       packages: write   # required to push to ghcr.io
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # QEMU + Buildx for multi-platform builds (amd64 + arm64)
       - uses: docker/setup-qemu-action@v3
@@ -77,7 +77,7 @@ jobs:
     needs: test   # publish even if Docker is still building
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -85,7 +85,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
-      - run: npm install
+      - run: npm ci
 
       # Strip the leading 'v' from the tag (v2.0.1 → 2.0.1) and sync package.json
       - name: Sync version from tag

@@ -12,12 +12,12 @@ jobs:
     name: Unit Tests (JS)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - run: npm run test-pipeline
 
   # Fast: Rust type-check only — no full compile, ~2min
@@ -25,7 +25,7 @@ jobs:
     name: Rust Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -73,7 +73,7 @@ jobs:
       RUST_LOG: warn
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -100,7 +100,7 @@ jobs:
           done
           curl -sf http://localhost:3000/health || (echo "Service failed to start" && exit 1)
 
-      - run: npm install
+      - run: npm ci
 
       - name: Run integration harness
         run: npm run harness
