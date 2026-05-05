@@ -9,13 +9,14 @@ mod scrubber;
 mod telemetry;
 
 use axum::{
-    extract::State,
+    extract::{Extension, State},
     http::{header, HeaderMap, StatusCode},
     middleware,
     response::IntoResponse,
     routing::{delete, get, post},
     Json, Router,
 };
+use crate::api_keys::ResolvedKey;
 use std::time::{SystemTime, UNIX_EPOCH};
 use metrics::{counter, histogram};
 use serde::{Deserialize, Serialize};
@@ -161,6 +162,7 @@ async fn metrics_endpoint(state: State<Arc<AppState>>) -> impl IntoResponse {
 #[instrument(skip_all, fields(episode_id = %payload.0.episode_id, project_id = %payload.0.project_id, n = payload.0.events.len(), req_id = tracing::field::Empty))]
 async fn store_memory(
     state: State<Arc<AppState>>,
+    Extension(resolved): Extension<ResolvedKey>,
     headers: HeaderMap,
     payload: Json<StoreRequest>,
 ) -> impl IntoResponse {
@@ -168,6 +170,10 @@ async fn store_memory(
     let payload = payload.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
+
+    if let Err(resp) = api_keys::enforce_project_scope(&resolved, payload.project_id) {
+        return resp;
+    }
 
     if payload.events.is_empty() {
         return (StatusCode::BAD_REQUEST, "events cannot be empty").into_response();
@@ -290,6 +296,7 @@ async fn store_memory(
 #[instrument(skip_all, fields(project_id = %payload.0.project_id, req_id = tracing::field::Empty))]
 async fn retrieve_memory(
     state: State<Arc<AppState>>,
+    Extension(resolved): Extension<ResolvedKey>,
     headers: HeaderMap,
     payload: Json<RetrieveRequest>,
 ) -> impl IntoResponse {
@@ -297,6 +304,10 @@ async fn retrieve_memory(
     let payload = payload.0;
     let start = Instant::now();
     tracing::Span::current().record("req_id", telemetry::request_id(&headers).as_str());
+
+    if let Err(resp) = api_keys::enforce_project_scope(&resolved, payload.project_id) {
+        return resp;
+    }
 
     let cache_key = build_cache_key(&state.cache, payload.project_id, &payload.query).await;
 

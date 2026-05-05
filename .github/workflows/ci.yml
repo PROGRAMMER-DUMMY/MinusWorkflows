@@ -71,6 +71,7 @@ jobs:
       ADMIN_KEY: ci-test-admin-key
       OCR_MEMORY_URL: http://localhost:3000
       RUST_LOG: warn
+      RATE_LIMIT_RPM: 500
 
     steps:
       - uses: actions/checkout@v5
