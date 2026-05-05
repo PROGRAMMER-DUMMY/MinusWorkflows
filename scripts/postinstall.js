@@ -7,7 +7,7 @@ if (process.env.npm_config_global !== 'true') process.exit(0);
 const b = '\x1b[1m', r = '\x1b[0m', c = '\x1b[36m', g = '\x1b[32m', d = '\x1b[2m';
 
 console.log(`
-${b}minus-workflows${r} installed.
+${b}@minustoken/minus-workflows${r} installed.
 
 ${b}Quick start (2 commands):${r}
 

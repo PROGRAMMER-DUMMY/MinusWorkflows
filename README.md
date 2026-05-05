@@ -41,7 +41,7 @@ See [`docs/architecture.md`](docs/architecture.md) for a full breakdown.
 
 ```bash
 # Install globally (auto-detects Claude Code and Gemini CLI)
-npm install -g minus-workflows
+npm install -g @minustoken/minus-workflows
 
 # Interactive setup — picks your AI provider, generates keys
 minus init
