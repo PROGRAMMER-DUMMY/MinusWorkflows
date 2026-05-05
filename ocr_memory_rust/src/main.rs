@@ -462,7 +462,7 @@ async fn optical_retrieve(
     project_id: Uuid,
     query: &str,
     backend: Backend,
-) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
     let t = Instant::now();
 
     let memory = sqlx::query(

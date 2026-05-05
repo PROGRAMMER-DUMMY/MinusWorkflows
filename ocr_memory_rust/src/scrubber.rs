@@ -164,7 +164,7 @@ fn build_redacted(text: &str, mask: &[bool]) -> String {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-pub fn init_scrubber() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
+pub fn init_scrubber() -> Result<SmartScrubber, Box<dyn std::error::Error + Send + Sync>> {
     #[cfg(feature = "ner")]
     return init_ner();
 
@@ -173,7 +173,7 @@ pub fn init_scrubber() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "ner")]
-fn init_ner() -> Result<SmartScrubber, Box<dyn std::error::Error>> {
+fn init_ner() -> Result<SmartScrubber, Box<dyn std::error::Error + Send + Sync>> {
     let device = Device::Cpu;
     let api = Api::new()?;
     let repo = api.repo(Repo::new(

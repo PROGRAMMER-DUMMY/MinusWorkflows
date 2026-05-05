@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;

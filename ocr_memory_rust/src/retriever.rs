@@ -28,7 +28,7 @@ impl VisionClient {
         image_bytes: &[u8],
         query: &str,
         backend: Backend,
-    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error>> {
+    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
         let base64_image = general_purpose::STANDARD.encode(image_bytes);
         let mime_type = match image::guess_format(image_bytes) {
             Ok(image::ImageFormat::Png)  => "image/png",
@@ -50,7 +50,7 @@ impl VisionClient {
         image_bytes: &[u8],
         query: &str,
         backend: Backend,
-    ) -> Result<Vec<u32>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<u32>, Box<dyn std::error::Error + Send + Sync>> {
         let (indices, _, _) = self.retrieve_indices_with_usage(image_bytes, query, backend).await?;
         Ok(indices)
     }
@@ -61,7 +61,7 @@ impl VisionClient {
         pool: &PgPool,
         project_id: Uuid,
         query: &str,
-    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         let logs = sqlx::query(
             "SELECT content FROM text_logs \
              WHERE project_id = $1 \
@@ -82,7 +82,7 @@ impl VisionClient {
         base64_image: &str,
         query: &str,
         mime_type: &str,
-    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error>> {
+    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
         let api_key = env::var("OPENAI_API_KEY").map_err(|_| "OPENAI_API_KEY not set")?;
         let model = env::var("VISION_MODEL_OPENAI")
             .unwrap_or_else(|_| "gpt-4o".to_string());
@@ -128,7 +128,7 @@ impl VisionClient {
         base64_image: &str,
         query: &str,
         mime_type: &str,
-    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error>> {
+    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
         let api_key = env::var("ANTHROPIC_API_KEY").map_err(|_| "ANTHROPIC_API_KEY not set")?;
         let model = env::var("VISION_MODEL_ANTHROPIC")
             .unwrap_or_else(|_| "claude-sonnet-4-6".to_string());
@@ -177,7 +177,7 @@ impl VisionClient {
         base64_image: &str,
         query: &str,
         mime_type: &str,
-    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error>> {
+    ) -> Result<(Vec<u32>, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
         let api_key = env::var("GOOGLE_API_KEY").map_err(|_| "GOOGLE_API_KEY not set")?;
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={}",
@@ -257,7 +257,7 @@ pub async fn vector_search(
     Some(results)
 }
 
-fn parse_indices(content: &str) -> Result<Vec<u32>, Box<dyn std::error::Error>> {
+fn parse_indices(content: &str) -> Result<Vec<u32>, Box<dyn std::error::Error + Send + Sync>> {
     let start = content.find('[');
     let end   = content.rfind(']');
     if let (Some(s), Some(e)) = (start, end) {
