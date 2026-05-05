@@ -20,34 +20,101 @@ jobs:
       - run: npm ci
       - run: npm run test-pipeline
 
-  # ── Docker: build multi-platform image and push to GHCR ──────────────────────
-  docker:
-    name: Build & Push Docker Image
+  # ── Docker: build each platform natively, then merge into one manifest ─────────
+  # Native runners (~4 min each) vs QEMU emulation (~2 hr for arm64 Rust builds).
+
+  docker-amd64:
+    name: Build Docker (amd64)
     runs-on: ubuntu-latest
     needs: test
     permissions:
       contents: read
-      packages: write   # required to push to ghcr.io
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - uses: actions/checkout@v5
-
-      # QEMU + Buildx for multi-platform builds (amd64 + arm64)
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Lowercase the repo name (GHCR requires lowercase image names)
       - name: Set image name
         run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      # Tags: vX.Y.Z + vX.Y + latest
+      - name: Build and push (amd64)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ocr_memory_rust
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.ref_name }}-amd64
+          cache-from: type=gha,scope=amd64
+          cache-to: type=gha,mode=max,scope=amd64
+
+  docker-arm64:
+    name: Build Docker (arm64)
+    runs-on: ubuntu-24.04-arm
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Build and push (arm64)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ocr_memory_rust
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,mode=max,scope=arm64
+
+  docker-merge:
+    name: Merge Docker Manifest
+    runs-on: ubuntu-latest
+    needs: [docker-amd64, docker-arm64]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -58,17 +125,14 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: ./ocr_memory_rust
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # Layer cache across runs — keeps rebuild time under 2min after first build
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create and push multi-platform manifest
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.IMAGE }}:${{ steps.meta.outputs.version }} \
+            --tag ${{ env.IMAGE }}:$(echo '${{ steps.meta.outputs.version }}' | cut -d. -f1-2) \
+            --tag ${{ env.IMAGE }}:latest \
+            ${{ env.IMAGE }}:${{ github.ref_name }}-amd64 \
+            ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
 
   # ── npm: publish package to npmjs.com ────────────────────────────────────────
   npm:
