@@ -75,6 +75,9 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     needs: test   # publish even if Docker is still building
+    permissions:
+      contents: read
+      id-token: write   # required for OIDC Trusted Publishing — no stored secret needed
 
     steps:
       - uses: actions/checkout@v5
@@ -94,6 +97,4 @@ jobs:
           npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Publish
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
