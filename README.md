@@ -40,19 +40,26 @@ See [`docs/architecture.md`](docs/architecture.md) for a full breakdown.
 ## Quick Start
 
 ```bash
-# 1. Install skills into your AI CLI(s)
-node install.js
+# Install globally (auto-detects Claude Code and Gemini CLI)
+npm install -g minus-workflows
 
-# 2. Copy and configure environment
-cp .env.example .env        # edit at minimum: POSTGRES_PASSWORD, API_KEY
+# Interactive setup — picks your AI provider, generates keys
+minus init
 
-# 3. Start the memory service
-docker-compose up --build
+# Start the memory service (requires Docker)
+minus start
 ```
 
 Then in Claude Code or Gemini CLI:
 ```
 /minus build me a REST API for user authentication
+```
+
+**Installing from source:**
+```bash
+git clone https://github.com/PROGRAMMER-DUMMY/MinusWorkflows
+cd MinusWorkflows
+node install.js      # installs skills + scaffolds project directories
 ```
 
 ---
@@ -119,21 +126,30 @@ When set, retrieval uses cosine similarity on 1536-dim embeddings stored in Post
 
 ## Authentication
 
-`/memory/store` and `/memory/retrieve` require an API key when `API_KEY` is set. `/health` and `/metrics` are always public.
+`/memory/store` and `/memory/retrieve` require an API key. `/health` and `/metrics` are always public.
 
+**DB-backed keys (recommended)** — scoped per project, rotatable, audited:
 ```bash
-# In .env
-API_KEY=your-strong-random-key   # generate: openssl rand -hex 32
+# Create a key (requires ADMIN_KEY)
+curl -X POST http://localhost:3000/keys \
+  -H "X-Admin-Key: $ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"project_id": "<uuid>", "label": "prod"}'
+
+# Rotate or revoke
+curl -X POST http://localhost:3000/keys/<id>/rotate -H "X-Admin-Key: $ADMIN_KEY"
+curl -X DELETE http://localhost:3000/keys/<id>       -H "X-Admin-Key: $ADMIN_KEY"
 ```
 
-Pass it as:
+**Global env key (dev fallback)** — set `API_KEY` in `.env`, works without a database row.
+
+Pass either key as:
 ```
 X-Api-Key: your-key
-# or
 Authorization: Bearer your-key
 ```
 
-Omitting `API_KEY` disables auth — suitable for local development only.
+Omitting both `API_KEY` and all DB keys disables auth — local development only.
 
 ---
 
@@ -245,7 +261,7 @@ MinusWorkflows/
 │
 ├── ocr_memory_rust/        # Rust/Axum OCR-Memory service
 │   ├── src/
-│   │   ├── auth.rs         # API key middleware
+│   │   ├── api_keys.rs     # API key management, auth middleware, audit log
 │   │   ├── db.rs           # schema + migrations (pg_trgm, pgvector)
 │   │   ├── embedder.rs     # OpenAI text embedding
 │   │   ├── main.rs         # routes, store, retrieve, cache logic

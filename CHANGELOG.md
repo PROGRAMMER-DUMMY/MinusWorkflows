@@ -2,6 +2,55 @@
 
 All notable changes to MinusWorkflows are documented here.
 
+## [2.0.5] — 2026-05-05
+
+### Fixed
+- **Project scope enforcement** — `store_memory` and `retrieve_memory` now extract `ResolvedKey` and return 403 when a project-scoped API key is used against a non-matching `project_id`. Previously all authenticated requests passed regardless of scope.
+- **CI rate limit** — added `RATE_LIMIT_RPM=500` to integration job env; the default 60 RPM was exhausted by the ~70 requests across harness suites before Suite 5 ran, causing false 429 failures.
+
+### Changed
+- **Redis** bumped `0.24 → 0.25` — removes deprecated Rust syntax that would be rejected by future compiler versions.
+- **`auth.rs` deleted** — superseded by `api_keys::auth_middleware` (DB-backed keys with `ResolvedKey` injection). The old env-only middleware was never wired up.
+
+### Removed
+- Dead `scope` field from `RetrieveRequest` (never consumed; serde ignores the JSON field from existing clients automatically).
+- Dead `retrieve_indices` wrapper method on `VisionClient` (only `retrieve_indices_with_usage` was called anywhere).
+
+---
+
+## [2.0.4] — 2026-05-05
+
+### Fixed
+- **`Box<dyn Error>` non-`Send` in async chains** — added `+ Send + Sync` bounds to all `Box<dyn Error>` return types in `optical_retrieve` (main.rs), all `VisionClient` methods (retriever.rs), and `init_scrubber`/`init_ner` (scrubber.rs). These made Futures non-`Send`, breaking the axum `Handler` trait impl and `tokio::task::spawn_blocking`.
+- Removed unused `Extension` import from `api_keys.rs`.
+
+---
+
+## [2.0.3] — 2026-05-05
+
+### Fixed
+- **`#[instrument]` with `String` field** — removed `query = %payload.0.query` from the `retrieve_memory` instrument macro. Borrowing a non-Copy field conflicted with moving `payload` into the async body, making the Future non-`Send`.
+- **CI workflows** — updated `actions/checkout@v4 → @v5`, Node.js `20 → 24`, `docker/build-push-action@v5 → @v6`, and `npm install → npm ci` across both `ci.yml` and `release.yml`.
+
+---
+
+## [2.0.2] — 2026-05-04
+
+### Fixed
+- **sqlx + pgvector version matrix** — `pgvector 0.4.1` implements sqlx **0.8** traits (not 0.7). Final versions: `sqlx = "0.8"` + `pgvector = "0.4"`.
+- **`sqlx::query!` macro in Docker builds** — the checked macro requires a live database at compile time; Docker builds have none. Converted all `query!` calls to `query()` across `api_keys.rs`, `retriever.rs`, and `main.rs`, adding `use sqlx::Row` and replacing field access with `row.try_get("field")`.
+- **`ab_glyph` API change** — `Glyph::positioned()` was removed in newer 0.2.x releases. Fixed by setting `glyph.position` directly as a public field.
+
+---
+
+## [2.0.1] — 2026-05-04
+
+### Fixed
+- `pgvector = "^0.5"` does not exist on crates.io — downgraded to `"0.4"`.
+- npm publish `EOTP` error — Classic npm tokens require OTP in CI; replaced with Granular Access Token + OIDC Trusted Publishing (no stored secret).
+
+---
+
 ## [2.0.0] — 2026-05-03
 
 ### Breaking changes
